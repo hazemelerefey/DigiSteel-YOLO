@@ -1,0 +1,21 @@
+# YOLOv11n with A2 + A3: Full DigiSteel-YOLO Architecture
+# NEU-DET dataset
+
+path: datasets/NEU-DET/yolo
+train: images/train
+val: images/val
+test: images/test
+
+nc: 6
+names:
+  0: crazing
+  1: inclusion
+  2: patches
+  3: pitted_surface
+  4: rolled-in_scale
+  5: scratches
+
+# Headline DigiSteel-YOLO configuration:
+# - A2: GhostConv weight-sharing backbone (25-35% param reduction)
+# - A3: Inner-WIoU loss (λ = 0.5)
+# Both modifications are applied in the training script (scripts/train_a2_a3.py).

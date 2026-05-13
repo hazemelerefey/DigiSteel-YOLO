@@ -1,0 +1,125 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "digisteel-yolo"
+version = "0.1.0"
+description = "Robust Real-Time Steel Surface Defect Detection Using Lightweight YOLO Models"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Hazem Elerefy", email = "hazem@example.com"},
+    {name = "Youssef Sherif", email = "youssef@example.com"},
+    {name = "Mohamed Salah", email = "mohamed@example.com"},
+    {name = "Moamen Esmat", email = "moamen@example.com"},
+    {name = "Mahmoud Hisham", email = "mahmoud@example.com"},
+]
+keywords = ["YOLO", "object-detection", "steel-defect", "deep-learning", "computer-vision"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+]
+
+dependencies = [
+    "ultralytics>=8.0.0",
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "albumentations>=1.3.0",
+    "opencv-python>=4.8.0",
+    "pyyaml>=6.0",
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+    "scikit-learn>=1.2.0",
+    "tqdm>=4.65.0",
+    "onnx>=1.14.0",
+    "onnxruntime>=1.15.0",
+    "tensorboard>=2.12.0",
+    "pillow>=9.5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.3.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.3.0",
+    "ruff>=0.0.260",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+    "python-dotenv>=1.0.0",
+]
+notebooks = [
+    "jupyter>=1.0.0",
+    "jupyterlab>=3.6.0",
+    "ipywidgets>=8.0.0",
+]
+collab = [
+    "wandb>=0.14.0",
+    "kaggle>=1.5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/your-team/digisteel-yolo"
+Documentation = "https://github.com/your-team/digisteel-yolo/blob/main/README.md"
+Repository = "https://github.com/your-team/digisteel-yolo.git"
+Issues = "https://github.com/your-team/digisteel-yolo/issues"
+
+[tool.setuptools]
+packages = ["digisteel"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+select = ["E", "F", "W", "I001"]
+ignore = ["E501"]  # Line too long (handled by black)
+exclude = [".git", "__pycache__", "build", "dist", ".venv"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers -v"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "gpu: marks tests requiring GPU",
+]
+
+[tool.coverage.run]
+source = ["digisteel"]
+omit = ["*/tests/*", "*/setup.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]

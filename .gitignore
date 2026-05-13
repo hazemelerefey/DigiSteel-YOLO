@@ -1,0 +1,110 @@
+# === DATASETS (NEVER commit — too large, license restrictions) ===
+datasets/
+*.zip
+*.tar.gz
+*.7z
+
+# === TRAINED WEIGHTS (NEVER commit — produced files) ===
+runs/
+weights/
+*.pt
+*.pth
+*.onnx
+
+# === EVALUATION OUTPUTS ===
+evals/
+figures/
+*.csv
+*.json
+
+# === ENVIRONMENT & CREDENTIALS (NEVER commit — security risk) ===
+.env
+.env.local
+.env.*.local
+kaggle.json
+credentials/
+secrets/
+*.key
+*.pem
+
+# === IDE & EDITOR ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+.project
+.pydevproject
+.settings/
+
+# === PYTHON ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+pip-log.txt
+pip-delete-this-directory.txt
+
+# === JUPYTER & NOTEBOOKS ===
+.ipynb_checkpoints
+*.ipynb_checkpoints
+.jupyterlab-settings
+.jupyter/
+
+# === LOGGING & CACHING ===
+*.log
+logs/
+.pytest_cache/
+.coverage
+htmlcov/
+.hypothesis/
+
+# === W&B, TENSORBOARD ===
+wandb/
+runs/tensorboard/
+events.out.tfevents.*
+
+# === MAC ===
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# === WINDOWS ===
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# === GIT ===
+.git
+.gitkeep
+
+# === MISC ===
+*.tmp
+*.backup
+*.orig
+.cache/
+temp/
+scratch/

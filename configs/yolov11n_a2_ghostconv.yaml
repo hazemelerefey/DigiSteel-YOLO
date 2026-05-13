@@ -1,0 +1,26 @@
+# YOLOv11n with A2: GhostConv Weight-Sharing Backbone
+# NEU-DET dataset
+
+path: datasets/NEU-DET/yolo
+train: images/train
+val: images/val
+test: images/test
+
+nc: 6
+names:
+  0: crazing
+  1: inclusion
+  2: patches
+  3: pitted_surface
+  4: rolled-in_scale
+  5: scratches
+
+# NOTE: Ultralytics YOLO v11 does not support direct YAML-based backbone swapping.
+# To use A2 GhostConv, instantiate the model in Python and monkey-patch the backbone:
+#
+#   from ultralytics import YOLO
+#   from digisteel.modules import GhostConv
+#   model = YOLO('yolo11n.pt')
+#   # Replace backbone blocks with GhostConv (see Week 1 script: scripts/train_a2.py)
+#
+# This config file documents the dataset; the architectural change is in the training script.

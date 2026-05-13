@@ -1,0 +1,19 @@
+# YOLOv11n Baseline Configuration
+# NEU-DET dataset
+
+path: datasets/NEU-DET/yolo  # Dataset path
+train: images/train
+val: images/val
+test: images/test
+
+# Number of classes
+nc: 6
+
+# Class names
+names:
+  0: crazing
+  1: inclusion
+  2: patches
+  3: pitted_surface
+  4: rolled-in_scale
+  5: scratches

@@ -1,0 +1,25 @@
+# YOLOv11n with A3: Inner-WIoU Loss
+# NEU-DET dataset
+
+path: datasets/NEU-DET/yolo
+train: images/train
+val: images/val
+test: images/test
+
+nc: 6
+names:
+  0: crazing
+  1: inclusion
+  2: patches
+  3: pitted_surface
+  4: rolled-in_scale
+  5: scratches
+
+# NOTE: Like A2, A3 is applied in the training script by patching BboxLoss:
+#
+#   from ultralytics import YOLO
+#   from digisteel.modules import InnerWIoULoss
+#   model = YOLO('yolo11n.pt')
+#   # Patch the loss during model.train() (see scripts/train_a3.py)
+#
+# This config documents the dataset; the loss is patched in scripts/train_a3.py.

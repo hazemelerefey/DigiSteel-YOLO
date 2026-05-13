@@ -1,0 +1,34 @@
+ultralytics>=8.0.0      # YOLO framework (v8/v10/v11)
+torch>=2.0.0            # PyTorch with CUDA support
+torchvision>=0.15.0     # Vision utilities
+albumentations>=1.3.0   # Image augmentation & perturbations
+opencv-python>=4.8.0    # Image I/O and processing
+pyyaml>=6.0             # YAML config parsing
+numpy>=1.24.0           # Numeric computing
+pandas>=2.0.0           # Data analysis
+matplotlib>=3.7.0       # Plotting
+seaborn>=0.12.0         # Statistical visualization
+scikit-learn>=1.2.0     # Metrics and utilities
+tqdm>=4.65.0            # Progress bars
+onnx>=1.14.0            # ONNX model format
+onnxruntime>=1.15.0     # ONNX inference CPU/GPU
+tensorboard>=2.12.0     # Training visualization
+pillow>=9.5.0           # Image handling
+
+# Development & Testing
+pytest>=7.3.0           # Testing framework
+pytest-cov>=4.1.0       # Coverage measurement
+black>=23.3.0           # Code formatter
+ruff>=0.0.260           # Fast linter
+flake8>=6.0.0           # Additional linting
+mypy>=1.0.0             # Type checking
+python-dotenv>=1.0.0    # Environment variable management
+
+# Optional: For dashboard & collaboration
+wandb>=0.14.0           # Weights & Biases logging (free academic tier)
+# kaggle>=1.5.0          # Install separately if needed for dataset download
+
+# Optional: For Jupyter notebooks
+jupyter>=1.0.0
+jupyterlab>=3.6.0
+ipywidgets>=8.0.0
