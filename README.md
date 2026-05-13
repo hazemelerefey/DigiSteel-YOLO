@@ -7,7 +7,7 @@
 
 ---
 
-# <div align="center"> ![DigiSteel Logo](assets/logo.png) **DigiSteel-YOLO** </div>
+# DigiSteel-YOLO
 
 ### <div align="center">Real-Time Steel Surface Defect Detection Using Lightweight YOLO Models</div>
 
