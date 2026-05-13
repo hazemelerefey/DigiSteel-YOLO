@@ -1,4 +1,8 @@
-# ✅ DIGISTEEL-YOLO GITHUB REPOSITORY - COMPLETE DEPLOYMENT SUMMARY
+<div align="center">
+  <img src="assets/logo.png" alt="DigiSteel Logo" width="100" height="auto" />
+</div>
+
+# 🌟 DIGISTEEL-YOLO GITHUB REPOSITORY - COMPLETE DEPLOYMENT SUMMARY
 
 **Date:** May 13, 2026  
 **Status:** ✅ LIVE AND READY FOR TEAM WORK

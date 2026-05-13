@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="assets/logo.png" alt="DigiSteel Logo" width="100" height="auto" />
+</div>
+
 # Team Collaboration & Branching Strategy
 
 **For 5-team parallel development without work overlap.**

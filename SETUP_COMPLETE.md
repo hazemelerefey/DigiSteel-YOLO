@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="assets/logo.png" alt="DigiSteel Logo" width="100" height="auto" />
+</div>
+
 # 📋 Repository Setup Complete - Summary for Your Team
 
 Your professional GitHub repository for **DigiSteel-YOLO** graduation project is ready.

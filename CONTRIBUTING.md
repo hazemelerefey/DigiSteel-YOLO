@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="assets/logo.png" alt="DigiSteel Logo" width="100" height="auto" />
+</div>
+
 # Contributing to DigiSteel-YOLO
 
 **Read this before making any contributions.** This is a graduation project with a 12-week deadline and specific operating rules.

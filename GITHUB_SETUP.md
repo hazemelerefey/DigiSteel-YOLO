@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="assets/logo.png" alt="DigiSteel Logo" width="80" height="auto" />
+</div>
+
 # GitHub Setup Guide for DigiSteel-YOLO Team
 
 **Follow this guide to set up the team GitHub repository and configure branch protection rules.**
