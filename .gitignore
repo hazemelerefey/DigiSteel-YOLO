@@ -15,7 +15,6 @@ weights/
 evals/
 figures/
 *.csv
-*.json
 
 # === ENVIRONMENT & CREDENTIALS (NEVER commit — security risk) ===
 .env
