@@ -15,7 +15,8 @@ const slugify = (value: string) =>
     .replace(/\s+/g, '-')
 
 const wikiPagesRaw = import.meta.glob('../../wiki/*.md', {
-  as: 'raw',
+  query: '?raw',
+  import: 'default',
   eager: true,
 }) as Record<string, string>
 
