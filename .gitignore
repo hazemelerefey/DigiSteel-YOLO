@@ -12,9 +12,12 @@ weights/
 *.onnx
 
 # === EVALUATION OUTPUTS ===
-evals/
-figures/
-*.csv
+evals/*.csv
+evals/*.json
+evals/*.png
+evals/*.jpg
+# Keep markdown reports for ablation study
+# evals/*.md
 
 # === ENVIRONMENT & CREDENTIALS (NEVER commit — security risk) ===
 .env
