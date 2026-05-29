@@ -1,8 +1,15 @@
-"""Unit tests for A2: GhostConv module."""
+"""Unit tests for GhostConv module."""
 import pytest
 import torch
-from digisteel.modules import GhostConv
-from digisteel.modules.ghost_conv import GhostConvWeightSharing
+from digisteel.modules import GhostConv, GhostModule
+
+
+def test_ghost_module_output_shape():
+    """GhostModule should output the correct shape."""
+    module = GhostModule(64, 128, kernel_size=1, ratio=2)
+    x = torch.randn(2, 64, 32, 32)
+    y = module(x)
+    assert y.shape == (2, 128, 32, 32)
 
 
 def test_ghost_conv_output_shape():
@@ -21,36 +28,30 @@ def test_ghost_conv_stride():
     assert y.shape == (2, 128, 16, 16)
 
 
-def test_ghost_conv_param_count():
-    """GhostConv should have fewer parameters than standard Conv."""
-    # This is approximate; actual count depends on the Ghost ratio
-    layer = GhostConv(in_channels=64, out_channels=128, kernel_size=3)
-    param_count = sum(p.numel() for p in layer.parameters())
-    # Expected to be much less than a standard Conv2d(64, 128, 3, padding=1)
-    # Standard Conv: 64 * 128 * 3 * 3 = 73,728 params
-    assert param_count > 0
+def test_ghost_conv_fewer_params():
+    """GhostConv should have fewer parameters than standard Conv2d."""
+    ghost = GhostConv(in_channels=64, out_channels=128, kernel_size=3)
+    standard = torch.nn.Conv2d(64, 128, 3, padding=1)
+
+    ghost_params = sum(p.numel() for p in ghost.parameters())
+    standard_params = sum(p.numel() for p in standard.parameters())
+
+    assert ghost_params < standard_params, (
+        f"GhostConv ({ghost_params}) should have fewer params than Conv2d ({standard_params})"
+    )
 
 
-def test_ghost_conv_weight_sharing():
-    """A2: Weight-sharing should reuse parameters across stages."""
-    shared = GhostConvWeightSharing(in_channels=64, out_channels=64)
+def test_ghost_conv_param_ratio():
+    """GhostConv should have roughly half the parameters of standard Conv2d."""
+    ghost = GhostConv(in_channels=64, out_channels=128, kernel_size=3)
+    standard = torch.nn.Conv2d(64, 128, 3, padding=1)
 
-    p3 = torch.randn(1, 64, 80, 80)
-    p4 = torch.randn(1, 64, 40, 40)
-    p5 = torch.randn(1, 64, 20, 20)
+    ghost_params = sum(p.numel() for p in ghost.parameters())
+    standard_params = sum(p.numel() for p in standard.parameters())
+    ratio = ghost_params / standard_params
 
-    out_p3 = shared(p3)
-    out_p4 = shared(p4)
-    out_p5 = shared(p5)
-
-    # All outputs should have the right channel count
-    assert out_p3.shape[1] == 64
-    assert out_p4.shape[1] == 64
-    assert out_p5.shape[1] == 64
-
-    # Total parameter count should be exactly 1x the underlying module
-    params = shared.param_count()
-    assert params > 0
+    # GhostConv should be roughly 50-70% of standard Conv2d
+    assert 0.3 < ratio < 0.8, f"Param ratio {ratio:.2f} outside expected range [0.3, 0.8]"
 
 
 def test_ghost_conv_backward():
@@ -63,3 +64,12 @@ def test_ghost_conv_backward():
 
     assert x.grad is not None
     assert x.grad.shape == x.shape
+
+
+def test_ghost_conv_different_channels():
+    """GhostConv should work with different channel configurations."""
+    for in_ch, out_ch in [(32, 64), (64, 64), (128, 256)]:
+        layer = GhostConv(in_channels=in_ch, out_channels=out_ch)
+        x = torch.randn(1, in_ch, 16, 16)
+        y = layer(x)
+        assert y.shape == (1, out_ch, 16, 16)

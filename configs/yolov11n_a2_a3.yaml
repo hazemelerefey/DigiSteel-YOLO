@@ -1,4 +1,4 @@
-# YOLOv11n with A2 + A3: Full DigiSteel-YOLO Architecture
+# YOLOv11n with GhostConv + Inner-WIoU: Lightweight Variant
 # NEU-DET dataset
 
 path: datasets/NEU-DET/yolo
@@ -15,7 +15,9 @@ names:
   4: rolled-in_scale
   5: scratches
 
-# Headline DigiSteel-YOLO configuration:
-# - A2: GhostConv weight-sharing backbone (25-35% param reduction)
-# - A3: Inner-WIoU loss (λ = 0.5)
+# Lightweight variant configuration:
+# - GhostConv backbone (Han et al., CVPR 2020) for parameter reduction
+# - Inner-WIoU loss (Zhang 2023 + Tong 2023) for improved box regression
+#
 # Both modifications are applied in the training script (scripts/train_a2_a3.py).
+# This variant is evaluated as part of the robustness study.

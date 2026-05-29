@@ -8,14 +8,14 @@
 
 ## 0. The 60-second summary
 
-- **Project:** *Robust Real-Time Steel Surface Defect Detection Using Lightweight YOLO Models and Industrial Condition Testing.*
-- **Working title for the team's contribution:** **DigiSteel-YOLO** — an edge-deployable, robustness-validated, cross-dataset lightweight detector for flat-steel surface defects.
+- **Project:** *Comprehensive Robustness Study of Lightweight YOLO Detectors for Steel Surface Defect Detection.*
+- **Working title for the team's contribution:** **DigiSteel-YOLO** — the first systematic evaluation of YOLO detector robustness to real-world image degradations in industrial steel inspection, with perturbation-aware training strategies.
 - **Owner:** Five-student team in the Digilians (MCIT) Specialized Diploma in Applied AI & Data Analytics, Egypt.
   Team: **Hazem Elerefy** (lead), **Youssef Sherif**, **Mohamed Salah**, **Moamen Esmat**, **Mahmoud Hisham**.
   Supervisor: **Dr. Tarek Ghoneimy.**
 - **Deadline:** Month 8 of the diploma calendar — the team has **~12 weeks left** at the moment this file is being written.
 - **Status:** **Chapter 2 (Literature Review) is complete and submitted-quality.** Phase-1 implementation (the 12-week MVP) has **not yet started** — that is the next deliverable.
-- **Phase-1 scope (what gets submitted at month 8):** YOLOv11n baseline + two architectural modifications (A2 GhostConv weight-sharing backbone, A3 Inner-WIoU loss), trained and evaluated on **NEU-DET + GC10-DET**, with a **4 × 3 robustness sweep**, **ONNX export**, comparison against the strongest reviewed papers, and an **open-source GitHub release with a Colab demo notebook**.
+- **Phase-1 scope (what gets submitted at month 8):** YOLOv11n baseline + two lightweight variants (GhostConv backbone, Inner-WIoU loss), trained and evaluated on **NEU-DET + GC10-DET**, with a **6 x 4 robustness sweep** (24 evaluation points per model per dataset), **perturbation-aware training experiments**, **ONNX export**, comparison against the strongest reviewed papers, and an **open-source GitHub release with the robustness evaluation toolkit**.
 - **Operating principle:** **No-guessing protocol.** Every numeric claim is traceable to a specific source. Where a metric is missing, the entry is `NR` (Not Reported); never an estimate, never an interpolation.
 
 If you have time to read only one section, read **§7 (Phase-1 work-packages and week-by-week plan)** and **§9 (Week-1 bootstrap actions for an AI agent)**.
@@ -80,7 +80,7 @@ These eleven peer-reviewed open-access papers (published 2025 – early 2026) ar
 | **P06** | **ELS-YOLO** | YOLOv11n | NEU-DET, GC10-DET, Severstal | C3k2_THK + Staged-Slim-Neck + MSDetect head; **only paper with 3 datasets including Severstal**. |
 | **P07** | **ASFRW-YOLO** | YOLOv5s | NEU-DET | ASF (SSFF+CPAM+TFE) + RepNCSPELAN4 + WIoU. |
 | **P08** | **MSFE-YOLO** | YOLOv11s | NEU-DET, GC10-DET | MSFC + C2MSDA (Sobel + attention) + AFFE; **only paper with edge benchmark (Jetson AGX Xavier 22.1 FPS — 75% drop vs RTX 3090).** |
-| **P09** | **EFEN-YOLOv8** | YOLOv8 | NEU-DET | LSKA + WASPP + ELSE + InnerEIoU; **only paper with public open-source code** (https://github.com/01WineCool/YOLO). |
+| **P09** | **EFEN-YOLOv8** | YOLOv8 | NEU-DET | SAConv + LSKA + WASPP + beta-FEIoU; published in PLOS ONE (2026). **Note:** The paper claims open-source code but the GitHub link (01WineCool/YOLO) returns 404 as of May 2026. |
 | **P10** | **KDM-YOLO** | YOLOv10n | NEU-DET | KWConv + C2f-DRB + MSAF; **highest accuracy in corpus (95.4% mAP@0.5)**. |
 | **P11** | **YOLOv11-EMD** | YOLOv11 | Combined NEU+Severstal | InnerEIoU + MSDA + C3k2_DynamicConv; **only paper with any robustness study (qualitative).** |
 
@@ -119,33 +119,68 @@ These eleven peer-reviewed open-access papers (published 2025 – early 2026) ar
 
 ## 5. The proposed contribution — DigiSteel-YOLO
 
-A YOLOv11n-based lightweight detector with two small architectural modifications and, critically, a **validation suite that no paper in the corpus has performed in full**.
+**A comprehensive robustness study of lightweight YOLO detectors for steel surface defect detection.**
 
-### 5.1 Architecture
+While existing research (our 11-paper corpus included) focuses on accuracy benchmarks (mAP on clean images), **no prior work systematically evaluates how these detectors perform under real-world industrial image degradations.** This is the gap our project fills.
 
-- **Baseline:** YOLOv11n. Same as P01, P03, P06, P11.
-- **A2 — GhostConv weight-sharing backbone.** Replace standard Conv blocks in Backbone stages 2–5 with GhostConv (Han 2020, ref [22] of Ch. 2). **Novelty:** share the cheap-feature weights across pyramid stages P3 / P4 / P5 (single weight tensor instead of three). Lineage already validated for steel by P01 / P02 / P04.
-- **A3 — Inner-WIoU regression loss.** `loss = λ · Inner-IoU(box, gt) + (1−λ) · WIoU_v3(box, gt)`, default `λ = 0.5`. **Novelty:** combines the auxiliary-bounding-box constraint of Inner-IoU (Zhang 2023, ref [33], validated for steel by P03/P05/P11) with the dynamic focusing of WIoU v3 (Tong 2023, ref [32], validated for steel by P07). The two components are orthogonal in motivation; this combination is not present in the published steel-defect literature to our knowledge.
-- **A1 — Sobel-prior first stage.** *Deferred to Phase 2* — design is in Appendix C of Chapter 2; do **not** implement in Phase 1.
+### 5.1 Research Question
 
-### 5.2 The validation suite (the real contribution)
+> *How robust are lightweight YOLO detectors to real-world image degradations in steel surface defect detection, and can perturbation-aware training improve deployment reliability?*
 
-For every reported result, the project will produce evidence on **all five axes** that no single reviewed paper has covered together:
+### 5.2 Core Contributions
 
-1. **Multi-dataset (Gap 1)** — NEU-DET full + GC10-DET full in Phase 1, with **identical hyper-parameters across both** (this is itself part of the contribution; cf. §2.6 of the chapter).
-2. **Quantitative robustness (Gap 2)** — 4 perturbations × 3 levels = **12 evaluation points per dataset, per model**: Gaussian blur (σ ∈ {1, 3, 5}), Gaussian noise (σ ∈ {0.05, 0.1, 0.2}), brightness drift (Δ ∈ {−50, +20, +50}), JPEG compression (Q ∈ {30, 50, 80}). Implemented with Albumentations.
-3. **Full eight-metric reporting (Gap 3)** — mAP@0.5, mAP@0.5:0.95, precision, recall, F1, FPS, params, GFLOPs. **No `NR` cells in our own results.**
-4. **Edge-device deployment (Gap 4)** — Phase 1: ONNX-Runtime CPU export. Proves portability without requiring physical edge hardware. Phase 2: Jetson Orin Nano + Raspberry Pi 5.
-5. **Open-source release + unified Pareto (Gap 5)** — public GitHub repo + Colab demo notebook + benchmark against P03/P05/P09/P10 (where available); cite published numbers for the others.
+**Contribution 1: Standardized Robustness Evaluation Framework (Primary)**
 
-### 5.3 What the team is *not* doing in Phase 1
+A systematic evaluation toolkit that tests detectors across 6 perturbation types x 4 severity levels = 24 evaluation points per model per dataset:
 
-- Severstal training (Phase 2).
-- Sobel-prior first stage (Phase 2).
-- 8 × 5 perturbation sweep (Phase 2 — Phase 1 uses 4 × 3 = 12).
-- Physical edge hardware (Phase 2 — Phase 1 uses ONNX CPU only).
-- INT8 quantisation (Phase 2).
-- A Q1 journal paper (Phase 2 outcome).
+| Perturbation | Level 1 | Level 2 | Level 3 | Level 4 |
+|---|---|---|---|---|
+| Gaussian Blur | sigma=1 | sigma=3 | sigma=5 | sigma=7 |
+| Motion Blur | k=3 | k=5 | k=7 | k=9 |
+| Gaussian Noise | sigma=0.05 | sigma=0.10 | sigma=0.20 | sigma=0.30 |
+| Brightness Shift | delta=-30 | delta=-50 | delta=+30 | delta=+50 |
+| Contrast Reduction | factor=0.8 | factor=0.6 | factor=0.4 | factor=0.2 |
+| JPEG Compression | quality=80 | quality=50 | quality=30 | quality=15 |
+
+**This is the first such framework for steel defect detection.** The closest prior work (RobustAD, CVPR 2025) benchmarks industrial anomaly detection but not steel-specific YOLO detectors.
+
+**Contribution 2: Perturbation-Aware Training Study (Technical)**
+
+Training YOLOv11n with perturbations injected during training, then measuring:
+- Which perturbation types improve robustness most when included in training?
+- What is the optimal severity level for training perturbations?
+- Is there a robustness-accuracy tradeoff?
+- Which defect types benefit most from robustness training?
+
+**This combination (evaluation + training) has not been done for steel defect detection.** The closest prior work (Liu et al. 2025) does both but for concrete crack segmentation, not steel object detection.
+
+**Contribution 3: Multi-Dataset Validation (Methodological)**
+
+Identical hyperparameters across NEU-DET and GC10-DET. This tests whether robustness patterns generalize across datasets — a question no prior steel defect paper has addressed.
+
+**Contribution 4: Open-Source Benchmark (Community)**
+
+Public GitHub repo with reproducible evaluation framework, enabling the community to benchmark their own detectors.
+
+### 5.3 Model Variants (Not Claimed as Novel)
+
+We evaluate multiple YOLO configurations to study robustness across architectures:
+
+- **Baseline:** YOLOv11n (reference performance)
+- **GhostConv variant:** YOLOv11n with GhostConv backbone (Han et al., CVPR 2020) — a proven lightweight convolution, not our invention
+- **Inner-WIoU variant:** YOLOv11n with Inner-WIoU loss (Zhang 2023 + Tong 2023) — a principled combination of existing losses, not our invention
+- **Combined variant:** GhostConv + Inner-WIoU — the lightweight configuration
+
+These variants are used to study whether lightweight architectures are more or less robust than standard ones — they are NOT claimed as novel contributions.
+
+### 5.4 What the team is *not* doing in Phase 1
+
+- Claiming architectural novelty (we use proven techniques)
+- Severstal training (Phase 2)
+- Sobel-prior first stage (Phase 2)
+- Physical edge hardware (Phase 2 — Phase 1 uses ONNX CPU only)
+- INT8 quantisation (Phase 2)
+- A Q1 journal paper (Phase 2 outcome)
 
 ---
 

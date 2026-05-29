@@ -1,37 +1,54 @@
 """
-A2: GhostConv Weight-Sharing Module
+GhostConv Module for Lightweight Steel Defect Detection.
 
-Implementation of Ghost convolution (Han et al., 2020, GhostNet)
-with weight-sharing across pyramid stages P3, P4, P5.
+Implementation of Ghost convolution (Han et al., 2020, GhostNet) as a
+drop-in replacement for standard Conv2d blocks in YOLO backbones.
 
-Novelty: Single weight tensor reused across three pyramid stages,
-reducing parameters by ~33% compared to independent GhostConv blocks.
+GhostConv generates "primary" feature maps via a standard convolution,
+then produces "ghost" feature maps via cheap linear transformations
+(depthwise convolution), reducing parameters while maintaining accuracy.
 
-Reference: Han et al. 2020, GhostNet (https://arxiv.org/abs/2005.04675)
-Applied to steel defect detection by: P01 PSF-YOLO, P02 LAM-YOLOv10n, P04 Lightweight-YOLOv8
+This module is used as a lightweight backbone variant in the DigiSteel-YOLO
+robustness study. It is NOT claimed as a novel contribution — it is a
+well-established technique (CVPR 2020) applied to steel defect detection.
+
+References:
+    - Han et al. 2020, GhostNet: More Features from Cheap Operations (CVPR 2020)
+      arXiv:1911.11907
+    - Applied to steel defect detection by:
+      P01 PSF-YOLO (Scientific Reports 2025, DOI: 10.1038/s41598-025-16619-9)
+      P02 LAM-YOLOv10n (Scientific Reports 2025, DOI: 10.1038/s41598-025-16725-8)
+      P04 Lightweight-YOLOv8 (Scientific Reports 2025, DOI: 10.1038/s41598-025-93469-5)
 """
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 class GhostModule(nn.Module):
     """
-    Ghost Module: cheap operation to generate more features from feature maps.
-    
-    Instead of learning all filters independently, learn a subset of "primary" features
-    and generate "ghost" features via cheap transformations (e.g., depthwise convs).
-    
+    Ghost Module: generates more features from cheap operations.
+
+    Instead of learning all filters independently, learn a subset of "primary"
+    features and generate "ghost" features via cheap depthwise convolutions.
+
+    This reduces parameters by ~50% compared to a standard convolution while
+    maintaining similar representational capacity.
+
     Args:
-        in_channels: Input channels
-        out_channels: Output channels (must be even for ghost generation)
-        kernel_size: Kernel size for primary convolution
-        ratio: Ratio of ghost features to primary features (default: 2, so ~2x expansion)
-        dw_size: Kernel size for cheap depthwise convolution
-        stride: Stride of the primary convolution
-        use_bn: Whether to use batch normalization (default: True)
-        act: Activation function (default: ReLU)
+        in_channels: Number of input channels.
+        out_channels: Number of output channels.
+        kernel_size: Kernel size for the primary convolution.
+        ratio: Expansion ratio (2 means ~2x features from primary + ghost).
+        dw_size: Kernel size for the cheap depthwise convolution.
+        stride: Stride of the primary convolution.
+        use_bn: Whether to use batch normalization.
+        act: Activation function ("relu" or "identity").
+
+    Example:
+        >>> module = GhostModule(64, 128)
+        >>> x = torch.randn(1, 64, 32, 32)
+        >>> y = module(x)  # shape: (1, 128, 32, 32)
     """
 
     def __init__(
@@ -86,10 +103,26 @@ class GhostModule(nn.Module):
 
 class GhostConv(nn.Module):
     """
-    GhostConv: Conv + GhostModule with optional stride.
-    
-    Standard entry point for using Ghost convolutions as a drop-in replacement
-    for standard Conv2d blocks in neural networks.
+    GhostConv: Drop-in replacement for Conv2d using Ghost modules.
+
+    Replaces a standard convolution with a Ghost module that generates
+    features more efficiently. Can be used anywhere Conv2d is used in
+    a YOLO backbone for parameter reduction.
+
+    Args:
+        in_channels: Number of input channels.
+        out_channels: Number of output channels.
+        kernel_size: Convolution kernel size.
+        stride: Convolution stride.
+        padding: Convolution padding.
+        groups: Number of groups (unused, kept for interface compatibility).
+        dilation: Dilation rate (unused, kept for interface compatibility).
+        bias: Whether to use bias (unused, controlled by use_bn in GhostModule).
+
+    Example:
+        >>> conv = GhostConv(64, 128, kernel_size=3, stride=1)
+        >>> x = torch.randn(1, 64, 32, 32)
+        >>> y = conv(x)  # shape: (1, 128, 32, 32)
     """
 
     def __init__(
@@ -104,49 +137,14 @@ class GhostConv(nn.Module):
         bias: bool = False,
     ):
         super().__init__()
-        self.conv = GhostModule(in_channels, out_channels, kernel_size, ratio=2, dw_size=3, stride=stride)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.conv(x)
-
-
-class GhostConvWeightSharing(nn.Module):
-    """
-    A2 Novelty: Weight-Sharing GhostConv across pyramid stages.
-    
-    A single GhostModule is instantiated once and its forward pass is called
-    three times on P3, P4, and P5 feature maps, reusing the learned weights.
-    
-    This reduces the parameter count by 2/3 for a backbone with three pyramid stages.
-    
-    Example:
-        >>> shared_ghost = GhostConvWeightSharing(64, 64)
-        >>> p3 = torch.randn(1, 64, 80, 80)  # imagenet 640 -> P3
-        >>> p4 = torch.randn(1, 64, 40, 40)  # imagenet 640 -> P4
-        >>> p5 = torch.randn(1, 64, 20, 20)  # imagenet 640 -> P5
-        >>> out_p3 = shared_ghost(p3)
-        >>> out_p4 = shared_ghost(p4)
-        >>> out_p5 = shared_ghost(p5)
-        >>> # Total params = 1 × GhostModule, not 3 × GhostModule
-    """
-
-    def __init__(
-        self,
-        in_channels: int,
-        out_channels: int,
-        kernel_size: int = 3,
-        ratio: int = 2,
-        dw_size: int = 3,
-    ):
-        super().__init__()
-        self.shared_ghost = GhostModule(
-            in_channels, out_channels, kernel_size=kernel_size, ratio=ratio, dw_size=dw_size
+        self.conv = GhostModule(
+            in_channels,
+            out_channels,
+            kernel_size,
+            ratio=2,
+            dw_size=3,
+            stride=stride,
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass reuses the shared ghost module."""
-        return self.shared_ghost(x)
-
-    def param_count(self) -> int:
-        """Return the number of parameters in the shared module."""
-        return sum(p.numel() for p in self.shared_ghost.parameters() if p.requires_grad)
+        return self.conv(x)

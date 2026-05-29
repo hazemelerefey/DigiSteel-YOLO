@@ -4,7 +4,7 @@
 
 The repository is structured as a Python package (`digisteel`) plus configuration and testing assets around it.
 
-- **Library layer:** `digisteel/` contains reusable code (A2/A3 and planned future modules).
+- **Library layer:** `digisteel/` contains reusable code (modules, perturbations, evaluation).
 - **Configuration layer:** `configs/` contains experiment config YAMLs.
 - **Quality layer:** `tests/` validates core primitives and ensures imports work in CI.
 - **Automation layer:** `.github/workflows/` runs ruff, black, and pytest on PRs/pushes.
@@ -19,46 +19,85 @@ flowchart TD
   Repo --> CI[".github/workflows (CI)"]
 
   Pkg --> Mods["digisteel/modules"]
-  Mods --> A2["ghost_conv.py (A2 GhostConv)"]
-  Mods --> A3["inner_wiou.py (A3 Inner-WIoU)"]
+  Mods --> Ghost["ghost_conv.py (GhostConv)"]
+  Mods --> Loss["inner_wiou.py (Inner-WIoU)"]
+
+  Pkg --> Pert["digisteel/perturbations"]
+  Pert --> Blur["blur.py"]
+  Pert --> Noise["noise.py"]
+  Pert --> Bright["brightness.py"]
+  Pert --> JPEG["jpeg.py"]
+  Pert --> Suite["suite.py (PerturbationSuite)"]
+
+  Pkg --> Eval["digisteel/eval"]
+  Eval --> Metrics["metrics.py"]
+  Eval --> Sweep["robustness_sweep.py (RobustnessSweep)"]
 
   Pkg --> StubData["digisteel/data (stub)"]
-  Pkg --> StubPert["digisteel/perturbations (stub)"]
-  Pkg --> StubEval["digisteel/eval (stub)"]
   Pkg --> StubExport["digisteel/export (stub)"]
 ```
 
-## Intended Training/Evaluation Flow (Documented, Not Yet Implemented Here)
+## Robustness Evaluation Flow (Core Contribution)
 
-The README describes a pipeline with scripts and tools (download datasets, convert formats, train variants, evaluate robustness, export ONNX). In this snapshot, those scripts are missing, but the directory placeholders are reflected in documentation like [00_START_HERE.md](../00_START_HERE.md).
-
-Intended flow, based on README and configs:
+The primary workflow is the robustness evaluation pipeline:
 
 ```mermaid
 flowchart LR
-  Data["Datasets (NEU-DET, GC10-DET)"] --> Prep["Tools: convert/split"]
-  Prep --> Train["Train (baseline / A2 / A3 / A2+A3)"]
-  Train --> Eval["Evaluate + Robustness sweep"]
-  Train --> Export["Export (ONNX)"]
+  Model["Trained YOLO Model"] --> Sweep["RobustnessSweep"]
+  Data["Dataset Images"] --> Suite["PerturbationSuite"]
+  Suite --> |"24 configs"| Sweep
+  Sweep --> |"evaluate each"| Results["SweepResult (192 data points)"]
+  Results --> CSV["CSV/JSON export"]
+  Results --> Analysis["Robustness analysis"]
+```
+
+### Perturbation Pipeline
+
+```mermaid
+flowchart LR
+  Image["Clean Image"] --> P1["Gaussian Blur (4 levels)"]
+  Image --> P2["Motion Blur (4 levels)"]
+  Image --> P3["Gaussian Noise (4 levels)"]
+  Image --> P4["Brightness Shift (4 levels)"]
+  Image --> P5["Contrast Reduction (4 levels)"]
+  Image --> P6["JPEG Compression (4 levels)"]
+  P1 --> Eval["Model Evaluation"]
+  P2 --> Eval
+  P3 --> Eval
+  P4 --> Eval
+  P5 --> Eval
+  P6 --> Eval
 ```
 
 ## Key Design Decisions
 
-### A2: Weight Sharing as a First-Class Primitive
+### Modules: Proven Techniques, Not Novel Claims
 
-- A2 is explicitly implemented as `GhostConvWeightSharing`, which wraps a single `GhostModule` and reuses it across multiple feature maps.
-- This is meant to be “wiring-level” logic: the caller controls which pyramid stage features reuse the same module instance.
+- `GhostConv` implements the Ghost convolution from Han et al. (CVPR 2020). It is a proven lightweight convolution technique, not our invention.
+- `InnerWIoULoss` combines Inner-IoU (Zhang 2023) and WIoU v3 (Tong 2023). It is a principled combination of existing losses, not our invention.
+- **The weight-sharing variant (GhostConvWeightSharing) was removed** because sharing weights across pyramid stages (P3/P4/P5) is architecturally unsound — different scales need different feature extractors.
 
-### A3: Loss Implemented as Standalone Torch Module
+### Perturbations: The Core Contribution
 
-- A3 is encapsulated in `InnerWIoULoss`, with helper functions (`iou`, `inner_iou_loss`, `wiou_v3_loss`) that operate on `[x1, y1, x2, y2]` formatted tensors.
-- This makes A3 easy to integrate into other training code without coupling to a specific detector implementation.
+- `PerturbationSuite` provides a unified interface for 6 perturbation types x 4 severity levels.
+- Each perturbation simulates a real-world industrial image degradation.
+- The suite is designed for reproducibility (seeded noise, deterministic transforms).
+
+### Evaluation: Standardized and Reproducible
+
+- `RobustnessSweep` runs the full evaluation pipeline (24 configs per model per dataset).
+- Results are exported as CSV/JSON with 8 metrics per evaluation point.
+- The framework supports any YOLO model loaded via Ultralytics.
 
 ## Entry Points
 
 - Package exports: [digisteel/__init__.py](../digisteel/__init__.py)
-  - `GhostConv`
-  - `InnerWIoULoss`
+  - `GhostConv`, `GhostModule`
+  - `InnerWIoULoss`, `inner_iou_loss`, `wiou_v3_loss`
+- Perturbation toolkit: [digisteel/perturbations/__init__.py](../digisteel/perturbations/__init__.py)
+  - `PerturbationSuite`, `GaussianBlur`, `MotionBlur`, `GaussianNoise`, `BrightnessShift`, `ContrastReduction`, `JPEGCompression`
+- Evaluation framework: [digisteel/eval/__init__.py](../digisteel/eval/__init__.py)
+  - `RobustnessSweep`, `compute_metrics`
 
 For deeper details, see:
 

@@ -1,0 +1,20 @@
+# GC10-DET Dataset Configuration for YOLOv11
+# 10 defect classes, 2048x1000 grayscale images
+
+path: datasets/GC10-DET/yolo
+train: images/train
+val: images/val
+test: images/test
+
+nc: 10
+names:
+  0: punching
+  1: weld_line
+  2: crescent_gap
+  3: water_spot
+  4: oil_spot
+  5: silk_spot
+  6: inclusion
+  7: rolled_pit
+  8: crease
+  9: waist_folding

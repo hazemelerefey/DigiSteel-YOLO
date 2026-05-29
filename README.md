@@ -9,56 +9,53 @@
 
 # DigiSteel-YOLO
 
-### <div align="center">Real-Time Steel Surface Defect Detection Using Lightweight YOLO Models</div>
+### <div align="center">Comprehensive Robustness Study of Lightweight YOLO Detectors for Steel Surface Defect Detection</div>
 
 <div align="center">
 
-**A robust, production-ready defect detector for flat-steel surfaces with validated robustness across multiple industrial datasets.**
+**The first systematic evaluation of YOLO detector robustness to real-world image degradations in industrial steel inspection.**
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-red)
 ![YOLO](https://img.shields.io/badge/YOLO-v11-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
+![Status](https://img.shields.io/badge/Status-Research%20in%20Progress-orange)
 
-[Quickstart](#-quick-start) • [Documentation](#-documentation) • [Demo](#-demo) • [Citation](#-citation)
+[Quickstart](#-quick-start) • [Documentation](#-documentation) • [Robustness Framework](#-robustness-evaluation-framework) • [Citation](#-citation)
 
 </div>
 
 ---
 
-## 📋 Table of Contents
+## About
 
-- [About](#-about)
-- [Quick Start](#-quick-start)
-- [Architecture](#-architecture)
-- [Datasets](#-datasets)
-- [Installation](#-installation)
-- [Usage](#-usage)
-- [Results](#-results)
-- [Contributing](#-contributing)
-- [License](#-license)
-- [Citation](#-citation)
-- [Contact](#-contact)
+**DigiSteel-YOLO** is a comprehensive robustness study for YOLO-based steel surface defect detectors. While existing research focuses on accuracy benchmarks (mAP on clean images), **no prior work systematically evaluates how these detectors perform under real-world industrial image degradations**.
 
----
+### Research Question
 
-## 🎯 About
+> *How robust are lightweight YOLO detectors to real-world image degradations in steel surface defect detection, and can perturbation-aware training improve deployment reliability?*
 
-**DigiSteel-YOLO** is a lightweight, production-ready YOLO-based detector for real-time steel surface defect detection in industrial environments. 
+### Key Contributions
 
-### Key Features
+1. **Standardized Robustness Evaluation Framework** — 6 perturbation types x 4 severity levels = 24 evaluation points per model per dataset
+2. **Perturbation-Aware Training Protocol** — Training with injected degradations to study robustness-accuracy tradeoffs
+3. **Multi-Dataset Validation** — Identical hyperparameters across NEU-DET and GC10-DET
+4. **Open-Source Benchmark** — Reproducible evaluation toolkit for the community
 
-✅ **Lightweight Architecture** — 25–35% parameter reduction via weight-sharing GhostConv  
-✅ **Multi-Dataset Validation** — Trained on NEU-DET + GC10-DET with identical hyperparameters  
-✅ **Quantitative Robustness** — 4×3 perturbation sweep with comprehensive evaluation  
-✅ **Edge-Ready** — ONNX-Runtime CPU export for deployment  
-✅ **Production-Grade** — 8-metric reporting, full reproducibility, open-source  
-✅ **Research-Backed** — Built on 11-paper literature corpus with validated novelty  
+### Why This Matters
+
+Steel defect detectors are deployed in harsh industrial environments where image quality degrades due to:
+- Camera defocus and lens contamination
+- Sensor noise and electrical interference
+- Lighting variation (over/underexposure)
+- Image compression during transmission
+- Environmental interference (fog, dust, vibration)
+
+**A detector that achieves 90% mAP on clean images but drops to 60% under blur is not production-ready.** This study quantifies these degradation patterns and proposes training strategies to mitigate them.
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
@@ -76,107 +73,126 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-### One-Command Setup
+### Run Robustness Evaluation
 
-```bash
-bash setup.sh
+```python
+from digisteel.perturbations import PerturbationSuite
+from digisteel.eval import RobustnessSweep
+
+# Initialize perturbation suite (6 types x 4 levels = 24 configs)
+suite = PerturbationSuite()
+print(suite.summary())
+
+# Run robustness sweep on a trained model
+sweep = RobustnessSweep(model_path="runs/baseline/weights/best.pt")
+results = sweep.run(dataset_path="datasets/NEU-DET/yolo", dataset_name="NEU-DET")
+sweep.save_results(results, "evals/baseline_robustness.csv")
 ```
 
-### Download & Prepare Datasets
+### Apply Perturbations to Images
 
-```bash
-bash tools/download_datasets.sh
-python tools/voc_to_yolo.py --dataset NEU-DET
-python tools/voc_to_yolo.py --dataset GC10-DET
-python tools/split_dataset.py --seed 42
-```
+```python
+import cv2
+from digisteel.perturbations import GaussianBlur, GaussianNoise, JPEGCompression
 
-### Train Baseline
+# Load an image
+image = cv2.imread("steel_sample.jpg")
 
-```bash
-python scripts/train_baseline.py --dataset NEU-DET --epochs 200 --seed 42
-```
-
-### Train DigiSteel-YOLO (A2 + A3)
-
-```bash
-python scripts/train_a2_a3.py --dataset NEU-DET --epochs 200 --seed 42
-```
-
-### Robustness Evaluation
-
-```bash
-python scripts/eval_robustness.py --model runs/a2_a3_neu/weights/best.pt --dataset NEU-DET
-```
-
-### Export to ONNX (Edge Deployment)
-
-```bash
-python scripts/export_onnx.py --model runs/a2_a3_neu/weights/best.pt --output digisteel-yolo.onnx
+# Apply different perturbations
+blurred = GaussianBlur(level=2).apply(image)      # sigma=3
+noisy = GaussianNoise(level=3, seed=42).apply(image)  # sigma=0.20
+compressed = JPEGCompression(level=2).apply(image)  # quality=50
 ```
 
 ---
 
-## 🏗️ Architecture
+## Robustness Evaluation Framework
 
-### **DigiSteel-YOLO** Modifications
+### Perturbation Matrix
 
-DigiSteel-YOLO enhances YOLOv11n with two architectural innovations:
+| Perturbation | Level 1 (Mild) | Level 2 (Moderate) | Level 3 (Severe) | Level 4 (Extreme) |
+|---|---|---|---|---|
+| **Gaussian Blur** | sigma=1 | sigma=3 | sigma=5 | sigma=7 |
+| **Motion Blur** | k=3 | k=5 | k=7 | k=9 |
+| **Gaussian Noise** | sigma=0.05 | sigma=0.10 | sigma=0.20 | sigma=0.30 |
+| **Brightness Shift** | delta=-30 | delta=-50 | delta=+30 | delta=+50 |
+| **Contrast Reduction** | factor=0.8 | factor=0.6 | factor=0.4 | factor=0.2 |
+| **JPEG Compression** | quality=80 | quality=50 | quality=30 | quality=15 |
 
-#### **A2 — GhostConv Weight-Sharing Backbone**
+### Metrics (8 per evaluation point)
 
-![GhostConv](assets/logo.png)
+| Metric | Description |
+|---|---|
+| mAP@0.5 | Mean Average Precision at IoU=0.5 |
+| mAP@0.5:0.95 | COCO mAP averaged over IoU 0.5..0.95 |
+| Precision | Positive predictive value |
+| Recall | True positive rate |
+| F1 | Harmonic mean of precision and recall |
+| FPS | Frames per second (inference speed) |
+| Parameters (M) | Model parameter count in millions |
+| GFLOPs | Floating-point operations per inference |
 
-- **Innovation:** Replaces standard Conv blocks with Ghost convolutions + weight-sharing across pyramid stages P3/P4/P5
-- **Benefit:** 25–35% parameter reduction while maintaining accuracy
-- **Lineage:** Validated for steel defects by P01 (PSF-YOLO), P02 (LAM-YOLOv10n), P04 (Lightweight-YOLOv8)
-- **Implementation:** `digisteel/modules/ghost_conv.py`
+### Output
 
-#### **A3 — Inner-WIoU Regression Loss**
-
-- **Innovation:** Composite loss combining Inner-IoU (auxiliary bounding-box constraint) + WIoU v3 (dynamic focusing)
-- **Formula:** `L = λ · L_InnerIoU + (1−λ) · L_WIoU_v3` where `λ = 0.5`
-- **Benefit:** Improved multi-dataset generalization, especially on GC10-DET
-- **Lineage:** Inner-IoU validated by P03, P05, P11; WIoU v3 validated by P07; **this combination is novel**
-- **Implementation:** `digisteel/modules/inner_wiou.py`
-
-### Validation Suite
-
-The project addresses **five research gaps** with a comprehensive validation suite:
-
-| Gap | Problem | DigiSteel Solution |
-|---|---|---|
-| **Gap 1** | Multi-dataset validation rare | Train on NEU-DET + GC10-DET with identical hyperparameters |
-| **Gap 2** | Quantitative robustness absent | 4 perturbations × 3 levels = 12 evaluation points per dataset |
-| **Gap 3** | Metric reporting inconsistent | Full 8-metric reporting (no NR cells) |
-| **Gap 4** | Edge deployment barely studied | ONNX-Runtime CPU export + verified inference |
-| **Gap 5** | Open-source + Pareto missing | Public GitHub + comparison vs P03/P05/P09/P10 |
-
----
-
-## 📊 Datasets
-
-### Phase 1 (Weeks 1–12) ✅
-
-- **NEU-DET**: 1,800 grayscale 200×200 images, 6 defect classes (crazing, inclusion, patches, pitted surface, rolled-in scale, scratches)
-- **GC10-DET**: 2,294 grayscale 2048×1000 images, 10 defect classes
-
-### Phase 2 (Post-graduation)
-
-- **Severstal**: 12,500+ industrial 256×1600 images, 4 defect classes
-
-**Download Instructions:** See `DATASETS.md`
+The framework produces a CSV/JSON with **192 data points per model per dataset** (24 perturbation configs x 8 metrics), enabling:
+- Per-perturbation degradation curves
+- Cross-model robustness comparison
+- Robustness-accuracy Pareto analysis
+- Per-defect-class vulnerability analysis
 
 ---
 
-## 📦 Installation
+## Datasets
+
+| Dataset | Images | Classes | Resolution | Source |
+|---|---|---|---|---|
+| **NEU-DET** | 1,800 | 6 | 200x200 grayscale | Northeastern University |
+| **GC10-DET** | 2,294 | 10 | 2048x1000 grayscale | Lv et al. |
+
+Both datasets are evaluated with **identical hyperparameters** to ensure fair cross-dataset comparison.
+
+---
+
+## Model Variants
+
+We evaluate multiple YOLO configurations to study robustness across architectures:
+
+| Variant | Base | Modification | Purpose |
+|---|---|---|---|
+| **Baseline** | YOLOv11n | None | Reference performance |
+| **GhostConv** | YOLOv11n | GhostConv backbone | Lightweight variant |
+| **Inner-WIoU** | YOLOv11n | Inner-WIoU loss | Improved box regression |
+| **GhostConv + Inner-WIoU** | YOLOv11n | Both modifications | Combined lightweight variant |
+
+### GhostConv (Lightweight Backbone)
+
+Drop-in replacement for standard Conv2d using Ghost convolutions (Han et al., CVPR 2020). Reduces parameters by ~50% while maintaining accuracy.
+
+```python
+from digisteel.modules import GhostConv
+# Use as replacement for torch.nn.Conv2d
+```
+
+### Inner-WIoU (Composite Loss)
+
+Combines Inner-IoU (Zhang 2023) and WIoU v3 (Tong 2023) for improved bounding box regression.
+
+```python
+from digisteel.modules import InnerWIoULoss
+loss_fn = InnerWIoULoss(lambda_weight=0.5)
+loss = loss_fn(pred_boxes, target_boxes)
+```
+
+---
+
+## Installation
 
 ### Requirements
 
 - Python 3.10+
 - PyTorch 2.0+ with CUDA 12.x (or CPU-only)
 - Ultralytics YOLO
-- Albumentations
+- OpenCV, NumPy, Albumentations
 
 ### Install from Source
 
@@ -190,139 +206,31 @@ pip install -e .
 ### Verify Installation
 
 ```bash
-python -c "from digisteel.modules import GhostConv, InnerWIoULoss; print('✓ DigiSteel installed')"
+python -c "from digisteel.perturbations import PerturbationSuite; print(PerturbationSuite().summary())"
+python -c "from digisteel.modules import GhostConv, InnerWIoULoss; print('Modules OK')"
 ```
 
 ---
 
-## 💻 Usage
-
-### Training
-
-```bash
-# Baseline (YOLOv11n)
-python scripts/train_baseline.py \
-    --dataset NEU-DET \
-    --epochs 200 \
-    --imgsz 640 \
-    --batch 16 \
-    --seed 42
-
-# With A2 GhostConv
-python scripts/train_a2.py --dataset NEU-DET --epochs 200
-
-# With A3 Inner-WIoU
-python scripts/train_a3.py --dataset NEU-DET --epochs 200
-
-# With Both (Headline DigiSteel-YOLO)
-python scripts/train_a2_a3.py --dataset NEU-DET --epochs 200
-```
-
-### Evaluation
-
-```bash
-# Standard evaluation
-python scripts/eval.py --model runs/a2_a3_neu/weights/best.pt --dataset NEU-DET
-
-# Robustness evaluation
-python scripts/eval_robustness.py \
-    --model runs/a2_a3_neu/weights/best.pt \
-    --dataset NEU-DET \
-    --perturbations blur,noise,brightness,jpeg
-```
-
-### Export
-
-```bash
-# Export to ONNX (CPU inference)
-python scripts/export_onnx.py \
-    --model runs/a2_a3_neu/weights/best.pt \
-    --output digisteel-yolo.onnx \
-    --verify
-```
-
-### Inference
-
-```python
-from ultralytics import YOLO
-
-# Load model
-model = YOLO('runs/a2_a3_neu/weights/best.pt')
-
-# Predict
-results = model.predict(source='image.jpg', conf=0.5)
-
-# Export to ONNX
-model.export(format='onnx', opset=12)
-```
-
----
-
-## 📈 Results
-
-### Phase 1 Headline Numbers
-
-| Model | Dataset | mAP@0.5 | mAP@0.5:0.95 | Params (M) | FPS |
-|---|---|---|---|---|---|
-| **YOLOv11n Baseline** | NEU-DET | TBD | TBD | 2.64 | TBD |
-| **A2 GhostConv** | NEU-DET | TBD | TBD | 1.95 | TBD |
-| **A3 Inner-WIoU** | NEU-DET | TBD | TBD | 2.64 | TBD |
-| **DigiSteel-YOLO (A2+A3)** | NEU-DET | TBD | TBD | 1.95 | TBD |
-| **DigiSteel-YOLO (A2+A3)** | GC10-DET | TBD | TBD | 1.95 | TBD |
-
-*(Results will be populated during Phase 1 weeks 4–8)*
-
-### Robustness Results
-
-Quantitative robustness sweep: 4 perturbations × 3 severity levels
-
-```
-Perturbation         Level 1    Level 2    Level 3
-─────────────────────────────────────────────────
-Gaussian Blur        σ=1        σ=3        σ=5
-Gaussian Noise       σ=0.05     σ=0.10     σ=0.20
-Brightness Shift     Δ=-50      Δ=+20      Δ=+50
-JPEG Compression     Q=80       Q=50       Q=30
-```
-
----
-
-## 🎓 Demo
-
-### Google Colab (Public Demo)
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/hazemelerefey/DigiSteel-YOLO/blob/main/notebooks/99_colab_demo.ipynb)
-
-Available in `notebooks/99_colab_demo.ipynb` — drag-and-drop defect images for real-time detection.
-
-### Jupyter Notebooks
-
-```
-notebooks/
-├── 01_dataset_inspect.ipynb      # Explore NEU-DET & GC10-DET
-├── 02_baseline_train.ipynb       # Train YOLOv11n baseline
-├── 03_robustness_sweep.ipynb     # Run robustness evaluation
-└── 99_colab_demo.ipynb           # Public-facing drag-and-drop demo
-```
-
----
-
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 DigiSteel-YOLO/
-├── assets/                           # Branding
-│   ├── logo.png                      # DigiSteel logo
-│   └── banner.png                    # Cover banner
-│
 ├── digisteel/                        # Main package
 │   ├── modules/
-│   │   ├── ghost_conv.py            # A2: GhostConv weight-sharing
-│   │   └── inner_wiou.py            # A3: Inner-WIoU loss
+│   │   ├── ghost_conv.py            # GhostConv lightweight backbone
+│   │   └── inner_wiou.py            # Inner-WIoU composite loss
+│   ├── perturbations/               # Robustness evaluation toolkit
+│   │   ├── blur.py                  # Gaussian & motion blur
+│   │   ├── noise.py                 # Gaussian noise
+│   │   ├── brightness.py            # Brightness & contrast
+│   │   ├── jpeg.py                  # JPEG compression
+│   │   └── suite.py                 # Unified perturbation interface
+│   ├── eval/
+│   │   ├── metrics.py               # Detection metrics computation
+│   │   └── robustness_sweep.py      # Systematic evaluation framework
 │   ├── data/                        # Dataset loaders
-│   ├── perturbations/               # Robustness toolkit
-│   ├── eval/                        # Evaluation utilities
-│   └── export/                      # Model export
+│   └── export/                      # Model export (ONNX)
 │
 ├── configs/                         # YOLO configurations
 │   ├── yolov11n_baseline.yaml
@@ -330,47 +238,27 @@ DigiSteel-YOLO/
 │   ├── yolov11n_a3_innerwiou.yaml
 │   └── yolov11n_a2_a3.yaml
 │
-├── scripts/                         # Training & evaluation
-│   ├── train_baseline.py
-│   ├── train_a2.py
-│   ├── train_a3.py
-│   ├── train_a2_a3.py
-│   └── eval_robustness.py
-│
-├── notebooks/                       # Jupyter demos
-│   └── 99_colab_demo.ipynb
-│
 ├── tests/                           # Unit tests
 │   ├── test_ghost_conv.py
 │   ├── test_inner_wiou.py
 │   └── test_perturbations.py
-│
-├── tools/                           # Data preparation
-│   ├── download_datasets.sh
-│   ├── voc_to_yolo.py
-│   └── split_dataset.py
 │
 ├── .github/workflows/               # CI/CD
 │   ├── test.yml
 │   └── release.yml
 │
 ├── README.md                        # This file
-├── CONTRIBUTING.md                  # Team collaboration
-├── PROJECT_GUIDE.md                 # 12-week plan
+├── PROJECT_GUIDE.md                 # Full project context
+├── CONTRIBUTING.md                  # Team collaboration guide
 ├── LICENSE                          # MIT
 └── requirements.txt                 # Dependencies
 ```
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
-We follow professional team collaboration practices. See `CONTRIBUTING.md` for:
-
-- **Branch Strategy** — Feature branches per team member, no overlap
-- **Code Standards** — PEP 8, black, ruff
-- **PR Workflow** — Peer review, CI/CD gates
-- **Commit Messages** — Atomic, descriptive, cited
+See `CONTRIBUTING.md` for team collaboration guidelines.
 
 ### Team Members
 
@@ -384,24 +272,21 @@ We follow professional team collaboration practices. See `CONTRIBUTING.md` for:
 
 ---
 
-## 📄 License
+## License
 
 **Code:** MIT License (see `LICENSE`)
 
-**Datasets:** Open-access under their respective licenses:
-- **NEU-DET:** Available at http://faculty.neu.edu.cn/songkechen/
-- **GC10-DET:** CC BY 4.0
-- **Severstal:** Kaggle Competition Terms
+**Datasets:** Open-access under their respective licenses.
 
 ---
 
-## 📚 Citation
+## Citation
 
 If you use DigiSteel-YOLO in your research, please cite:
 
 ```bibtex
 @software{digisteel2026,
-  title={DigiSteel-YOLO: Robust Real-Time Steel Surface Defect Detection Using Lightweight YOLO Models and Industrial Condition Testing},
+  title={DigiSteel-YOLO: Comprehensive Robustness Study of Lightweight YOLO Detectors for Steel Surface Defect Detection},
   author={Elerefy, Hazem and Sherif, Youssef and Salah, Mohamed and Esmat, Moamen and Hisham, Mahmoud},
   year={2026},
   publisher={GitHub},
@@ -412,7 +297,7 @@ If you use DigiSteel-YOLO in your research, please cite:
 
 ---
 
-## 📞 Contact & Support
+## Contact & Support
 
 - **Team Lead:** Hazem Elerefy
 - **Supervisor:** Dr. Tarek Ghoneimy
@@ -421,27 +306,22 @@ If you use DigiSteel-YOLO in your research, please cite:
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Ultralytics** — YOLO framework and ecosystem
-- **Authors (Literature Corpus):**
-  - Song & Yan (NEU-DET)
-  - Lv et al. (GC10-DET)
-  - Severstal PJSC (Severstal dataset)
-  - Han et al. (GhostNet — A2 backbone)
-  - Zhang et al. (Inner-IoU — A3 loss)
-  - Tong et al. (WIoU v3 — A3 loss)
+- **Han et al. (CVPR 2020)** — GhostNet / GhostConv
+- **Zhang et al. (2023)** — Inner-IoU loss (arXiv:2311.02877)
+- **Tong et al. (2023)** — WIoU v3 loss (arXiv:2301.10051)
+- **Song & Yan** — NEU-DET dataset
+- **Lv et al.** — GC10-DET dataset
 
 ---
 
 <div align="center">
 
-### 🌟 Star us on GitHub if you find this useful!
+**Built by the DigiSteel Team**
 
 ![Stars](https://img.shields.io/github/stars/hazemelerefey/DigiSteel-YOLO?style=social)
 ![Forks](https://img.shields.io/github/forks/hazemelerefey/DigiSteel-YOLO?style=social)
-![Watchers](https://img.shields.io/github/watchers/hazemelerefey/DigiSteel-YOLO?style=social)
-
-**Built with ❤️ by the DigiSteel Team**
 
 </div>
