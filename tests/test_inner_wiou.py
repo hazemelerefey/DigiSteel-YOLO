@@ -1,7 +1,7 @@
 """Unit tests for A3: Inner-WIoU loss module."""
 import pytest
 import torch
-from digisteel.modules.inner_wiou import InnerWIoULoss, inner_iou_loss, wiou_v3_loss
+from digisteel.modules.inner_wiou import InnerWIoULoss, inner_iou_loss, inner_wiou_iou, wiou_v3_loss
 
 
 def test_inner_iou_loss_perfect_boxes():
@@ -75,3 +75,45 @@ def test_inner_wiou_loss_repr():
     s = str(loss_fn)
     assert "InnerWIoULoss" in s
     assert "lambda" in s.lower()
+
+
+def test_inner_wiou_iou_returns_tensor():
+    """inner_wiou_iou should return per-box IoU tensor, not scalar."""
+    pred = torch.tensor([
+        [10.0, 10.0, 50.0, 50.0],
+        [20.0, 20.0, 60.0, 60.0],
+    ])
+    target = torch.tensor([
+        [10.0, 10.0, 50.0, 50.0],
+        [25.0, 25.0, 65.0, 65.0],
+    ])
+    iou_vals = inner_wiou_iou(pred, target)
+    assert iou_vals.shape == (2,), f"Expected shape (2,), got {iou_vals.shape}"
+    assert iou_vals[0].item() > 0.9  # near-perfect overlap
+    assert 0.0 < iou_vals[1].item() < 1.0  # partial overlap
+
+
+def test_inner_wiou_iou_perfect_match():
+    """Perfect overlap should give IoU close to 1."""
+    boxes = torch.tensor([[10.0, 10.0, 50.0, 50.0]])
+    iou_vals = inner_wiou_iou(boxes, boxes)
+    assert iou_vals[0].item() > 0.99
+
+
+def test_inner_wiou_iou_xywh_format():
+    """inner_wiou_iou should accept xywh format when specified."""
+    # xywh: center_x, center_y, width, height
+    pred = torch.tensor([[30.0, 30.0, 40.0, 40.0]])
+    target = torch.tensor([[30.0, 30.0, 40.0, 40.0]])
+    iou_vals = inner_wiou_iou(pred, target, xywh=True)
+    assert iou_vals.shape == (1,)
+    assert iou_vals[0].item() > 0.99
+
+
+def test_inner_wiou_iou_backward():
+    """Gradients should flow through inner_wiou_iou."""
+    pred = torch.tensor([[10.0, 10.0, 50.0, 50.0]], requires_grad=True)
+    target = torch.tensor([[10.0, 10.0, 50.0, 50.0]])
+    iou_vals = inner_wiou_iou(pred, target)
+    iou_vals.sum().backward()
+    assert pred.grad is not None

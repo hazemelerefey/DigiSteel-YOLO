@@ -1,5 +1,5 @@
 # Core dependencies
-ultralytics>=8.0.0      # YOLO framework (v8/v10/v11)
+ultralytics>=8.3.0,<8.4.0  # Pinned to YOLO11-era (YOLO26 changes loss architecture)
 torch>=2.0.0            # PyTorch with CUDA support
 torchvision>=0.15.0     # Vision utilities
 opencv-python>=4.8.0    # Image I/O and processing

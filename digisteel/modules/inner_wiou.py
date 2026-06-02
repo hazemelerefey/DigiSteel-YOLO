@@ -181,3 +181,62 @@ class InnerWIoULoss(nn.Module):
 
     def __repr__(self) -> str:
         return f"InnerWIoULoss(lambda={self.lambda_weight}, eps={self.eps})"
+
+
+def inner_wiou_iou(
+    pred_boxes: torch.Tensor,
+    target_boxes: torch.Tensor,
+    xywh: bool = False,
+    eps: float = 1e-7,
+) -> torch.Tensor:
+    """
+    Compute Inner-WIoU as a per-box IoU-like metric for trainer integration.
+
+    Returns a (N,) tensor of IoU-like values in [0, 1] that Ultralytics'
+    BboxLoss can use directly. Higher = better alignment.
+
+    Combines standard IoU with WIoU-style aspect/scale penalty:
+        wiou = iou / (1 + aspect_diff + scale_diff)
+
+    Args:
+        pred_boxes: Predicted boxes, shape (N, 4).
+        target_boxes: Target boxes, shape (N, 4).
+        xywh: If True, input is (cx, cy, w, h); converted to xyxy internally.
+        eps: Numerical stability.
+
+    Returns:
+        Per-box IoU-like values, shape (N,).
+    """
+    if xywh:
+        pred_xy = pred_boxes[:, :2]
+        pred_wh = pred_boxes[:, 2:]
+        pred_x1y1 = pred_xy - pred_wh / 2
+        pred_x2y2 = pred_xy + pred_wh / 2
+        pred_xyxy = torch.cat([pred_x1y1, pred_x2y2], dim=1)
+
+        tgt_xy = target_boxes[:, :2]
+        tgt_wh = target_boxes[:, 2:]
+        tgt_x1y1 = tgt_xy - tgt_wh / 2
+        tgt_x2y2 = tgt_xy + tgt_wh / 2
+        tgt_xyxy = torch.cat([tgt_x1y1, tgt_x2y2], dim=1)
+    else:
+        pred_xyxy = pred_boxes
+        tgt_xyxy = target_boxes
+
+    iou_val = iou(pred_xyxy, tgt_xyxy, eps)
+
+    # WIoU weighting: scale IoU by inverse of aspect+scale discrepancy
+    pred_w = pred_xyxy[:, 2] - pred_xyxy[:, 0]
+    pred_h = pred_xyxy[:, 3] - pred_xyxy[:, 1]
+    tgt_w = tgt_xyxy[:, 2] - tgt_xyxy[:, 0]
+    tgt_h = tgt_xyxy[:, 3] - tgt_xyxy[:, 1]
+
+    aspect_diff = torch.abs(pred_w / (pred_h + eps) - tgt_w / (tgt_h + eps))
+    scale_diff = torch.abs(
+        torch.sqrt(pred_w * pred_h + eps) - torch.sqrt(tgt_w * tgt_h + eps)
+    )
+
+    penalty = aspect_diff + scale_diff
+    wiou_val = iou_val / (1.0 + penalty)
+
+    return wiou_val

@@ -1,0 +1,52 @@
+# DigiSteel-YOLO v2 Architecture
+# YOLOv11n + GhostConv backbone + WFCA + EMA neck + Inner-WIoU loss
+#
+# IMPORTANT: Register custom modules before loading this config:
+#   import ultralytics.nn.tasks as tasks
+#   from digisteel.modules import GhostConv, WFCA, EMA
+#   tasks.GhostConv = GhostConv
+#   tasks.WFCA = WFCA
+#   tasks.EMA = EMA
+
+nc: 6
+scales:
+  n: [0.50, 0.25, 1024]  # YOLO11n scale factors
+
+# Backbone: GhostConv + WFCA at P2 and P3
+backbone:
+  - [-1, 1, GhostConv, [64, 3, 2]]     # 0-P1/2   (320x320 @ imgsz=640)
+  - [-1, 1, GhostConv, [128, 3, 2]]    # 1-P2/4   (160x160)
+  - [-1, 1, C2f, [128, True]]          # 2
+  - [-1, 1, WFCA, [128, 4, 2]]         # 3  WFCA at P2: r=4, 2-level DWT
+  - [-1, 1, GhostConv, [256, 3, 2]]    # 4-P3/8   (80x80)
+  - [-1, 1, C2f, [256, True]]          # 5
+  - [-1, 1, WFCA, [256, 8, 1]]         # 6  WFCA at P3: r=8, 1-level DWT
+  - [-1, 1, GhostConv, [512, 3, 2]]    # 7-P4/16  (40x40)
+  - [-1, 1, C2f, [512, True]]          # 8
+  - [-1, 1, GhostConv, [1024, 3, 2]]   # 9-P5/32  (20x20)
+  - [-1, 1, C2f, [1024, True]]         # 10
+  - [-1, 1, SPPF, [1024, 5]]           # 11
+
+# Neck: PAN-FPN with EMA attention
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 12
+  - [[-1, 8], 1, Concat, [1]]                     # 13  cat P4
+  - [-1, 1, C2f, [512]]                           # 14
+  - [-1, 1, EMA, [512]]                           # 15  EMA on P4-up
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 16
+  - [[-1, 6], 1, Concat, [1]]                     # 17  cat P3 (after WFCA)
+  - [-1, 1, C2f, [256]]                           # 18
+  - [-1, 1, EMA, [256]]                           # 19  EMA on P3-up
+
+  - [-1, 1, GhostConv, [256, 3, 2]]              # 20  downsample
+  - [[-1, 15], 1, Concat, [1]]                    # 21  cat P4-up+EMA
+  - [-1, 1, C2f, [512]]                           # 22
+  - [-1, 1, EMA, [512]]                           # 23  EMA on P4-down
+
+  - [-1, 1, GhostConv, [512, 3, 2]]              # 24  downsample
+  - [[-1, 11], 1, Concat, [1]]                    # 25  cat P5 (SPPF)
+  - [-1, 1, C2f, [1024]]                          # 26
+  - [-1, 1, EMA, [1024]]                          # 27  EMA on P5-down
+
+  - [[19, 23, 27], 1, Detect, [nc]]              # 28  Detect from EMA outputs
