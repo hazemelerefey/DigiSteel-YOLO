@@ -1,10 +1,16 @@
 """
 DigiSteel-YOLO v2 Custom Trainer.
 
-Subclasses Ultralytics DetectionTrainer to:
-1. Register custom modules (GhostConv, WFCA, EMA) into ultralytics namespace
-2. Inject Inner-WIoU loss into BboxLoss during training
-3. Enable perturbation-aware training augmentation
+Approach: Subclass Ultralytics DetectionTrainer and override get_model() to inject
+Inner-WIoU loss AFTER the model criterion is built. This is more reliable than
+monkey-patching trainer.train() because get_model() is guaranteed to run before
+any training step and the criterion is available at that point.
+
+Components:
+1. register_custom_modules() - injects GhostConv, WFCA, EMA into ultralytics namespace
+2. InnerWIoUAdapter - replaces IoU computation inside BboxLoss with Inner-WIoU
+3. DigiSteelTrainer - proper DetectionTrainer subclass with loss injection
+4. patch_model_for_digisteel() - utility for inference model preparation
 
 Usage:
     from digisteel.engine.trainer import DigiSteelTrainer, register_custom_modules
@@ -15,6 +21,7 @@ Usage:
 """
 
 import torch
+from ultralytics.models.yolo.detect import DetectionTrainer
 
 
 def register_custom_modules():
@@ -73,86 +80,52 @@ class InnerWIoUAdapter:
         return iou_val * self.lambda_weight + iou_val * focus * (1 - self.lambda_weight)
 
 
-class DigiSteelTrainer:
+class DigiSteelTrainer(DetectionTrainer):
     """
     Custom trainer for DigiSteel-YOLO v2.
 
-    Wraps Ultralytics DetectionTrainer to inject:
-    1. Module registration (GhostConv, WFCA, EMA)
-    2. Inner-WIoU loss patching
-
-    Can be used in two ways:
-    1. As a trainer class (subclasses DetectionTrainer)
-    2. As a function that patches an existing model
-
-    Usage (as function):
-        from digisteel.engine.trainer import patch_model_for_digisteel
-        model = YOLO("configs/models/digisteel_v2.yaml")
-        patch_model_for_digisteel(model)
-        model.train(...)
-
-    Usage (as trainer):
-        from digisteel.engine.trainer import DigiSteelTrainer
-        trainer = DigiSteelTrainer(overrides={...})
-        trainer.train()
+    Subclasses DetectionTrainer to inject Inner-WIoU loss into BboxLoss.
+    Two injection points ensure reliability across Ultralytics versions:
+    1. get_model() — patches immediately after model build
+    2. _do_train() — second-chance patch before first training step
     """
 
-    @staticmethod
-    def create_trainer(overrides: dict = None):
-        """
-        Create an Ultralytics DetectionTrainer with DigiSteel patches applied.
+    _iou_patched = False
 
-        Args:
-            overrides: Ultralytics trainer overrides dict.
+    def get_model(self, cfg=None, weights=None, verbose=True):
+        """Build model and inject Inner-WIoU into BboxLoss."""
+        model = super().get_model(cfg, weights, verbose)
+        self._try_patch_loss(model, verbose)
+        return model
 
-        Returns:
-            Configured DetectionTrainer instance.
-        """
+    def _do_train(self, world_size=1):
+        """Second-chance loss injection before training starts."""
+        if not self._iou_patched and hasattr(self, "model"):
+            self._try_patch_loss(self.model, verbose=True)
+        return super()._do_train(world_size)
+
+    def _try_patch_loss(self, model, verbose=False):
+        """Attempt to inject InnerWIoUAdapter into bbox_loss.iou."""
+        if self._iou_patched:
+            return
+        if hasattr(model, "criterion") and hasattr(model.criterion, "bbox_loss"):
+            model.criterion.bbox_loss.iou = InnerWIoUAdapter(lambda_weight=0.5)
+            self._iou_patched = True
+            if verbose:
+                print("  [DigiSteel] Inner-WIoU loss injected into BboxLoss")
+        elif verbose:
+            print("  [DigiSteel] Warning: criterion.bbox_loss not yet available")
+
+    @classmethod
+    def create_trainer(cls, overrides=None):
+        """Factory method (backwards compatible with older notebook code)."""
         register_custom_modules()
-
-        from ultralytics.models.yolo.detect import DetectionTrainer
-
-        trainer = DetectionTrainer(overrides=overrides or {})
-
-        # Patch the criterion's bbox_loss IoU computation
-        _patch_loss_iou(trainer)
-
-        return trainer
-
-
-def _patch_loss_iou(trainer):
-    """
-    Patch the trainer's loss to use Inner-WIoU.
-
-    This replaces the IoU computation inside BboxLoss with our Inner-WIoU
-    metric. It's a targeted monkey-patch that survives Ultralytics' internal
-    loss object rebuilds.
-    """
-    try:
-        adapter = InnerWIoUAdapter(lambda_weight=0.5)
-
-        # The criterion is built lazily in Ultralytics.
-        # We hook into the train method to patch after it's built.
-        original_train = trainer.train
-
-        def patched_train(*args, **kwargs):
-            # Patch after criterion is built
-            if hasattr(trainer, "model") and hasattr(trainer.model, "criterion"):
-                criterion = trainer.model.criterion
-                if hasattr(criterion, "bbox_loss"):
-                    criterion.bbox_loss.iou = adapter
-                    print("  [DigiSteel] Patched BboxLoss with Inner-WIoU")
-            return original_train(*args, **kwargs)
-
-        trainer.train = patched_train
-    except Exception as e:
-        print(f"  [DigiSteel] Warning: Could not patch loss: {e}")
-        print("  [DigiSteel] Training will use standard CIoU loss")
+        return cls(overrides=overrides or {})
 
 
 def patch_model_for_digisteel(model):
     """
-    Patch a YOLO model for DigiSteel training.
+    Patch a YOLO model for DigiSteel inference.
 
     Registers custom modules and prepares the model for use with
     DigiSteel v2 architecture YAML.
@@ -168,7 +141,7 @@ def patch_model_for_digisteel(model):
     if hasattr(model, "model") and model.model is not None:
         info = model.model
         num_params = sum(p.numel() for p in info.parameters()) if hasattr(info, "parameters") else 0
-        print(f"  [DigiSteel] Model loaded: {num_params / 1e6:.2f}M params")
+        print("  [DigiSteel] Model loaded: {:.2f}M params".format(num_params / 1e6))
 
         # Check for expected modules
         from digisteel.modules.wfca import WFCA
@@ -179,6 +152,6 @@ def patch_model_for_digisteel(model):
         ema_count = sum(1 for m in info.modules() if isinstance(m, EMA))
         gc_count = sum(1 for m in info.modules() if isinstance(m, GhostConv))
 
-        print(f"  [DigiSteel] Modules: {gc_count} GhostConv, {wfca_count} WFCA, {ema_count} EMA")
+        print("  [DigiSteel] Modules: {} GhostConv, {} WFCA, {} EMA".format(gc_count, wfca_count, ema_count))
 
     return model
