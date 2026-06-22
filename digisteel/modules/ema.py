@@ -32,26 +32,42 @@ class EMA(nn.Module):
 
     def __init__(self, channels: int, groups: int = 4):
         super().__init__()
-        assert channels % groups == 0, (
-            f"channels ({channels}) must be divisible by groups ({groups})"
-        )
         self.groups = groups
+        self._built = False
+
+        # Dummy parameter for device detection (EMA has no learnable params in __init__)
+        self._device_anchor = nn.Parameter(torch.empty(0))
 
         self.avg_pool_h = nn.AdaptiveAvgPool2d((None, 1))
         self.avg_pool_w = nn.AdaptiveAvgPool2d((1, None))
 
-        group_ch = channels // groups
+    def _build(self, actual_channels: int):
+        """Lazily build layers based on actual input channels."""
+        assert actual_channels % self.groups == 0, (
+            f"channels ({actual_channels}) must be divisible by groups ({self.groups})"
+        )
+        group_ch = actual_channels // self.groups
 
-        self.gn = nn.GroupNorm(groups, channels)
-
+        self.gn = nn.GroupNorm(self.groups, actual_channels)
         self.conv_hw = nn.Conv2d(group_ch, group_ch, kernel_size=1)
         self.conv_pool_h = nn.Conv1d(group_ch, group_ch, kernel_size=3, padding=1)
         self.conv_pool_w = nn.Conv1d(group_ch, group_ch, kernel_size=3, padding=1)
 
-        self.softmax = nn.Softmax(dim=-1)
+        # Move to same device as anchor parameter
+        device = self._device_anchor.device
+        self.gn = self.gn.to(device)
+        self.conv_hw = self.conv_hw.to(device)
+        self.conv_pool_h = self.conv_pool_h.to(device)
+        self.conv_pool_w = self.conv_pool_w.to(device)
+
+        self._built = True
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         B, C, H, W = x.shape
+
+        # Lazy initialization on first forward pass
+        if not self._built:
+            self._build(C)
 
         # Group normalization
         x_gn = self.gn(x)

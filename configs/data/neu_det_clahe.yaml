@@ -1,0 +1,16 @@
+# NEU-DET Dataset with CLAHE Preprocessing
+# Enhanced contrast for low-contrast steel defect images
+
+path: D:/DigiSteel-Yolo/DigiSteel-YOLO/datasets/NEU-DET/yolo_clahe
+train: images/train
+val: images/val
+test: images/test
+
+nc: 6
+names:
+  0: crazing
+  1: inclusion
+  2: patches
+  3: pitted_surface
+  4: rolled-in_scale
+  5: scratches

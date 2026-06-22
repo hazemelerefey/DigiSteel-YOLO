@@ -1,0 +1,50 @@
+# DigiSteel-YOLO Architecture
+# YOLOv11n + DAFE (Defect-Aware Feature Enhancement)
+#
+# Novel contribution: DAFE module specifically designed for flat steel
+# surface defects. Dual-branch design:
+#   - Edge branch: detects linear defects (scratches, crazing)
+#   - Texture branch: detects surface anomalies (pitting, scale)
+#
+# IMPORTANT: Register custom modules before loading this config:
+#   from digisteel.modules import DAFE
+#   tasks.DAFE = DAFE
+
+nc: 6
+scales:
+  n: [0.50, 0.25, 1024]  # YOLO11n scale factors
+
+# Backbone: Standard YOLOv11n + DAFE at P2 and P3
+backbone:
+  - [-1, 1, Conv, [64, 3, 2]]     # 0-P1/2   (320x320 @ imgsz=640)
+  - [-1, 1, Conv, [128, 3, 2]]    # 1-P2/4   (160x160)
+  - [-1, 1, C2f, [128, True]]     # 2
+  - [-1, 1, DAFE, [128, 8]]       # 3  DAFE at P2: reduction=8
+  - [-1, 1, Conv, [256, 3, 2]]    # 4-P3/8   (80x80)
+  - [-1, 1, C2f, [256, True]]     # 5
+  - [-1, 1, DAFE, [256, 8]]       # 6  DAFE at P3: reduction=8
+  - [-1, 1, Conv, [512, 3, 2]]    # 7-P4/16  (40x40)
+  - [-1, 1, C2f, [512, True]]     # 8
+  - [-1, 1, Conv, [1024, 3, 2]]   # 9-P5/32  (20x20)
+  - [-1, 1, C2f, [1024, True]]    # 10
+  - [-1, 1, SPPF, [1024, 5]]      # 11
+
+# Neck: Standard PAN-FPN (no EMA — it didn't help in ablation)
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 12
+  - [[-1, 8], 1, Concat, [1]]                     # 13  cat P4
+  - [-1, 1, C2f, [512]]                           # 14
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 15
+  - [[-1, 6], 1, Concat, [1]]                     # 16  cat P3 (after DAFE)
+  - [-1, 1, C2f, [256]]                           # 17
+
+  - [-1, 1, Conv, [256, 3, 2]]                    # 18  downsample
+  - [[-1, 14], 1, Concat, [1]]                    # 19  cat P4
+  - [-1, 1, C2f, [512]]                           # 20
+
+  - [-1, 1, Conv, [512, 3, 2]]                    # 21  downsample
+  - [[-1, 11], 1, Concat, [1]]                    # 22  cat P5 (SPPF)
+  - [-1, 1, C2f, [1024]]                          # 23
+
+  - [[17, 20, 23], 1, Detect, [nc]]               # 24  Detect
