@@ -1,0 +1,17 @@
+{
+  "phase": "Week3-A1",
+  "description": "Config-only fix \u2014 mosaic=0, mixup=0.15, degrees=10, translate=0.2, scale=0.6, shear=5, epochs=400",
+  "mAP50": 0.748,
+  "mAP50_95": 0.4162,
+  "precision": 0.7366,
+  "recall": 0.7027,
+  "f1": 0.7193,
+  "per_class_mAP50": {
+    "crazing": 0.1332,
+    "inclusion": 0.4525,
+    "patches": 0.603,
+    "pitted_surface": 0.493,
+    "rolled-in_scale": 0.2749,
+    "scratches": 0.5408
+  }
+}

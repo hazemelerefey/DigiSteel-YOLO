@@ -15,10 +15,10 @@ weights/
 *.pth
 *.onnx
 
-# === EVALUATION OUTPUTS ===
+# === EVALUATION OUTPUTS (keep JSON/PNG for results tracking) ===
 evals/*.csv
-evals/*.json
-evals/*.png
+# evals/*.json  — tracked for reproducibility
+# evals/*.png   — tracked for result visualization
 evals/*.jpg
 # Keep markdown reports for ablation study
 # evals/*.md
