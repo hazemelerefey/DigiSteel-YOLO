@@ -51,18 +51,33 @@ Steel defect detectors are deployed in harsh industrial environments where image
 
 ## Quick Start
 
-### Installation
+### One-Command Setup (Windows)
 
 ```bash
-# Clone the repository
+git clone https://github.com/hazemelerefey/DigiSteel-YOLO.git && cd DigiSteel-YOLO && setup_env.bat
+```
+
+This will automatically:
+- Create a Python virtual environment
+- Install PyTorch with CUDA 12.1
+- Install all dependencies
+- Set up the DigiSteel package
+- Verify everything works
+
+### Daily Activation (after initial setup)
+
+```bash
+cd DigiSteel-YOLO && venv\Scripts\activate
+```
+
+### Manual Installation (if not using .bat)
+
+```bash
 git clone https://github.com/hazemelerefey/DigiSteel-YOLO.git
 cd DigiSteel-YOLO
-
-# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
-
-# Install dependencies
+venv\Scripts\activate
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
 pip install -r requirements.txt
 pip install -e .
 ```
@@ -184,15 +199,24 @@ loss = loss_fn(pred_boxes, target_boxes)
 ### Requirements
 
 - Python 3.10+
+- NVIDIA GPU with CUDA 12.x support (minimum 4GB VRAM)
 - PyTorch 2.0+ with CUDA 12.x (or CPU-only)
-- Ultralytics YOLO
+- Ultralytics YOLO 8.3.x
 - OpenCV, NumPy, Albumentations
 
-### Install from Source
+### Quick Install (Recommended)
+
+```bash
+git clone https://github.com/hazemelerefey/DigiSteel-YOLO.git && cd DigiSteel-YOLO && setup_env.bat
+```
+
+### Manual Install
 
 ```bash
 git clone https://github.com/hazemelerefey/DigiSteel-YOLO.git
 cd DigiSteel-YOLO
+python -m venv venv
+venv\Scripts\activate
 pip install -r requirements.txt
 pip install -e .
 ```
