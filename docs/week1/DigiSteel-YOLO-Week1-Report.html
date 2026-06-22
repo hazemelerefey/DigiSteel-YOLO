@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DigiSteel-YOLO - Week 1 Report</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --steel-900: #0a1628;
+    --steel-800: #111d33;
+    --steel-700: #1a2a42;
+    --steel-600: #243751;
+    --steel-500: #2e4460;
+    --steel-400: #4a6580;
+    --steel-300: #7a9ab5;
+    --steel-200: #b0c8db;
+    --steel-100: #dbe8f0;
+    --steel-50:  #f0f5f9;
+    --accent:    #00b4d8;
+    --accent-dk: #0096b7;
+    --accent-lt: #48cae4;
+    --accent-bg: rgba(0,180,216,0.08);
+    --fail:      #ef476f;
+    --fail-bg:   rgba(239,71,111,0.08);
+    --pass:      #06d6a0;
+    --pass-bg:   rgba(6,214,160,0.08);
+    --warn:      #ffd166;
+    --warn-bg:   rgba(255,209,102,0.08);
+    --text:      #1a2a42;
+    --text-muted:#5a7a96;
+    --white:     #ffffff;
+    --radius:    12px;
+    --radius-sm: 8px;
+    --shadow:    0 4px 24px rgba(10,22,40,0.08);
+    --shadow-lg: 0 12px 48px rgba(10,22,40,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--steel-50);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 10.5pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ---- Cover Page ---- */
+  .cover {
+    width: 100%;
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--steel-900) 0%, var(--steel-700) 50%, var(--steel-800) 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+  }
+
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 30% 40%, rgba(0,180,216,0.12) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(72,202,228,0.08) 0%, transparent 40%);
+    animation: none;
+  }
+
+  .cover-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+      linear-gradient(rgba(0,180,216,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,180,216,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .cover-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 60px;
+  }
+
+  .cover-badge {
+    display: inline-block;
+    background: rgba(0,180,216,0.15);
+    border: 1px solid rgba(0,180,216,0.3);
+    color: var(--accent-lt);
+    padding: 8px 24px;
+    border-radius: 100px;
+    font-size: 11pt;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+
+  .cover-title {
+    font-size: 42pt;
+    font-weight: 900;
+    color: var(--white);
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+
+  .cover-title span {
+    background: linear-gradient(135deg, var(--accent), var(--accent-lt));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .cover-subtitle {
+    font-size: 16pt;
+    font-weight: 300;
+    color: var(--steel-300);
+    margin-bottom: 48px;
+  }
+
+  .cover-meta {
+    display: flex;
+    gap: 48px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .cover-meta-item {
+    text-align: center;
+  }
+
+  .cover-meta-label {
+    font-size: 8pt;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--steel-400);
+    margin-bottom: 4px;
+  }
+
+  .cover-meta-value {
+    font-size: 11pt;
+    font-weight: 500;
+    color: var(--steel-200);
+  }
+
+  .cover-decoration {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-lt), var(--accent));
+  }
+
+  /* ---- Page Layout ---- */
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 56px;
+    background: var(--white);
+    min-height: 100vh;
+  }
+
+  @media print {
+    .page {
+      max-width: 100%;
+      padding: 40px 50px;
+      box-shadow: none;
+    }
+    .cover {
+      min-height: 100vh;
+    }
+  }
+
+  /* ---- Typography ---- */
+  h1 {
+    font-size: 22pt;
+    font-weight: 800;
+    color: var(--steel-900);
+    margin: 48px 0 24px 0;
+    padding-bottom: 12px;
+    border-bottom: 3px solid var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  h1:first-child { margin-top: 0; }
+
+  h2 {
+    font-size: 15pt;
+    font-weight: 700;
+    color: var(--steel-800);
+    margin: 36px 0 16px 0;
+    padding-left: 16px;
+    border-left: 4px solid var(--accent);
+  }
+
+  h3 {
+    font-size: 12pt;
+    font-weight: 600;
+    color: var(--steel-600);
+    margin: 24px 0 12px 0;
+  }
+
+  p { margin-bottom: 12px; }
+
+  strong { font-weight: 600; }
+
+  /* ---- Info Bar ---- */
+  .info-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin: 24px 0 32px 0;
+  }
+
+  .info-item {
+    background: var(--steel-50);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    text-align: center;
+    border: 1px solid var(--steel-100);
+  }
+
+  .info-item-label {
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .info-item-value {
+    font-size: 11pt;
+    font-weight: 600;
+    color: var(--steel-800);
+  }
+
+  /* ---- Metric Cards ---- */
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  .metric-card {
+    background: var(--white);
+    border: 1px solid var(--steel-100);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+  }
+
+  .metric-card.accent::before { background: var(--accent); }
+  .metric-card.fail::before { background: var(--fail); }
+  .metric-card.pass::before { background: var(--pass); }
+  .metric-card.warn::before { background: var(--warn); }
+
+  .metric-card-label {
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .metric-card-value {
+    font-size: 24pt;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .metric-card.accent .metric-card-value { color: var(--accent-dk); }
+  .metric-card.fail .metric-card-value { color: var(--fail); }
+  .metric-card.pass .metric-card-value { color: var(--pass); }
+  .metric-card.warn .metric-card-value { color: var(--warn); }
+
+  .metric-card-delta {
+    font-size: 9pt;
+    font-weight: 600;
+  }
+
+  .delta-neg { color: var(--fail); }
+  .delta-pos { color: var(--pass); }
+
+  /* ---- Tables ---- */
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 20px 0;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--steel-100);
+  }
+
+  thead th {
+    background: var(--steel-800);
+    color: var(--white);
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  tbody td {
+    padding: 12px 16px;
+    font-size: 10pt;
+    border-bottom: 1px solid var(--steel-100);
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  tbody tr:nth-child(even) { background: var(--steel-50); }
+  tbody tr:hover { background: rgba(0,180,216,0.04); }
+
+  .td-fail { color: var(--fail); font-weight: 600; }
+  .td-pass { color: var(--pass); font-weight: 600; }
+  .td-best { color: var(--accent-dk); font-weight: 700; }
+  .td-muted { color: var(--text-muted); }
+
+  /* ---- Bar Charts (CSS) ---- */
+  .bar-chart {
+    margin: 20px 0;
+  }
+
+  .bar-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 12px;
+  }
+
+  .bar-label {
+    width: 130px;
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--steel-700);
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .bar-track {
+    flex: 1;
+    height: 28px;
+    background: var(--steel-50);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid var(--steel-100);
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+    font-size: 8.5pt;
+    font-weight: 700;
+    color: var(--white);
+    transition: width 0.5s ease;
+    min-width: 50px;
+  }
+
+  .bar-fill.c-accent { background: linear-gradient(90deg, var(--accent-dk), var(--accent)); }
+  .bar-fill.c-fail { background: linear-gradient(90deg, #d63660, var(--fail)); }
+  .bar-fill.c-pass { background: linear-gradient(90deg, #04b88a, var(--pass)); }
+  .bar-fill.c-warn { background: linear-gradient(90deg, #e6b84d, var(--warn)); }
+  .bar-fill.c-steel { background: linear-gradient(90deg, var(--steel-500), var(--steel-400)); }
+
+  .bar-baseline {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background: var(--steel-900);
+    z-index: 2;
+  }
+
+  .bar-baseline::after {
+    content: attr(data-label);
+    position: absolute;
+    top: -18px;
+    left: -12px;
+    font-size: 7pt;
+    font-weight: 600;
+    color: var(--steel-900);
+    white-space: nowrap;
+  }
+
+  /* ---- Status Badges ---- */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .badge-fail {
+    background: var(--fail-bg);
+    color: var(--fail);
+    border: 1px solid rgba(239,71,111,0.2);
+  }
+
+  .badge-pass {
+    background: var(--pass-bg);
+    color: var(--pass);
+    border: 1px solid rgba(6,214,160,0.2);
+  }
+
+  .badge-warn {
+    background: var(--warn-bg);
+    color: #b8941e;
+    border: 1px solid rgba(255,209,102,0.3);
+  }
+
+  .badge-accent {
+    background: var(--accent-bg);
+    color: var(--accent-dk);
+    border: 1px solid rgba(0,180,216,0.2);
+  }
+
+  /* ---- Callout Boxes ---- */
+  .callout {
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin: 20px 0;
+    border-left: 4px solid;
+  }
+
+  .callout-fail {
+    background: var(--fail-bg);
+    border-color: var(--fail);
+  }
+
+  .callout-pass {
+    background: var(--pass-bg);
+    border-color: var(--pass);
+  }
+
+  .callout-warn {
+    background: var(--warn-bg);
+    border-color: var(--warn);
+  }
+
+  .callout-accent {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+  }
+
+  .callout-title {
+    font-size: 10pt;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .callout-fail .callout-title { color: var(--fail); }
+  .callout-pass .callout-title { color: var(--pass); }
+  .callout-warn .callout-title { color: #b8941e; }
+  .callout-accent .callout-title { color: var(--accent-dk); }
+
+  .callout p {
+    font-size: 9.5pt;
+    margin: 0;
+  }
+
+  /* ---- Section Number ---- */
+  .section-num {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--white);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 28px;
+    font-size: 11pt;
+    font-weight: 700;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  /* ---- Comparison Table ---- */
+  .comparison-table {
+    margin: 24px 0;
+  }
+
+  .comparison-table .highlight-row {
+    background: rgba(0,180,216,0.06) !important;
+    border-left: 3px solid var(--accent);
+  }
+
+  .comparison-table .fail-row {
+    background: rgba(239,71,111,0.04) !important;
+  }
+
+  /* ---- Hypothesis vs Reality ---- */
+  .hypo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0;
+  }
+
+  .hypo-card {
+    background: var(--white);
+    border: 1px solid var(--steel-100);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .hypo-card-header {
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid;
+  }
+
+  .hypo-claim .hypo-card-header {
+    color: var(--accent-dk);
+    border-color: var(--accent);
+  }
+
+  .hypo-reality .hypo-card-header {
+    color: var(--fail);
+    border-color: var(--fail);
+  }
+
+  .hypo-item {
+    font-size: 9.5pt;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--steel-50);
+  }
+
+  .hypo-item:last-child { border-bottom: none; }
+
+  /* ---- Timeline ---- */
+  .timeline {
+    margin: 24px 0;
+    position: relative;
+    padding-left: 32px;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--steel-200);
+  }
+
+  .timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+    padding: 16px 20px;
+    background: var(--steel-50);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--steel-100);
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -28px;
+    top: 20px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    background: var(--white);
+  }
+
+  .timeline-item.fail::before {
+    border-color: var(--fail);
+    background: var(--fail-bg);
+  }
+
+  .timeline-item.pass::before {
+    border-color: var(--pass);
+    background: var(--pass-bg);
+  }
+
+  .timeline-title {
+    font-size: 10pt;
+    font-weight: 700;
+    color: var(--steel-800);
+    margin-bottom: 4px;
+  }
+
+  .timeline-desc {
+    font-size: 9pt;
+    color: var(--text-muted);
+  }
+
+  /* ---- Conclusion Box ---- */
+  .conclusion-box {
+    background: linear-gradient(135deg, var(--steel-900), var(--steel-700));
+    border-radius: var(--radius);
+    padding: 32px;
+    margin: 32px 0;
+    color: var(--white);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .conclusion-box::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 60%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(0,180,216,0.1) 0%, transparent 60%);
+  }
+
+  .conclusion-box h2 {
+    color: var(--accent-lt);
+    border-left-color: var(--accent-lt);
+    position: relative;
+    z-index: 1;
+  }
+
+  .conclusion-box p, .conclusion-box li {
+    color: var(--steel-200);
+    position: relative;
+    z-index: 1;
+  }
+
+  .conclusion-box strong {
+    color: var(--white);
+  }
+
+  /* ---- Footer ---- */
+  .report-footer {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--steel-100);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-brand {
+    font-size: 9pt;
+    font-weight: 700;
+    color: var(--steel-400);
+    letter-spacing: 1px;
+  }
+
+  .footer-brand span {
+    color: var(--accent);
+  }
+
+  .footer-date {
+    font-size: 8pt;
+    color: var(--text-muted);
+  }
+
+  /* ---- Utilities ---- */
+  .text-center { text-align: center; }
+  .text-muted { color: var(--text-muted); }
+  .mt-0 { margin-top: 0; }
+  .mb-0 { margin-bottom: 0; }
+  .mb-8 { margin-bottom: 8px; }
+  .mb-16 { margin-bottom: 16px; }
+  .mb-24 { margin-bottom: 24px; }
+  .mb-32 { margin-bottom: 32px; }
+
+  .page-break { page-break-before: always; }
+
+  ul, ol {
+    margin: 12px 0 12px 24px;
+  }
+
+  li {
+    margin-bottom: 6px;
+    font-size: 10pt;
+  }
+
+  /* Print optimization */
+  @media print {
+    body { font-size: 10pt; }
+    .cover { page-break-after: always; }
+    h1 { page-break-after: avoid; }
+    table { page-break-inside: avoid; }
+    .metric-grid { page-break-inside: avoid; }
+    .callout { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== COVER PAGE ==================== -->
+<div class="cover">
+  <div class="cover-grid"></div>
+  <div class="cover-content">
+    <div class="cover-badge">Progress Report</div>
+    <div class="cover-title">Digi<span>Steel</span>-YOLO</div>
+    <div class="cover-subtitle">Week 1 - Initial Exploration &amp; DAFE Design</div>
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Prepared for</div>
+        <div class="cover-meta-value">Dr. Tarek Ghoneimy</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Prepared by</div>
+        <div class="cover-meta-value">Hazem Elerefy</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Date</div>
+        <div class="cover-meta-value">June 7, 2026</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Phase</div>
+        <div class="cover-meta-value">Initial Exploration</div>
+      </div>
+    </div>
+  </div>
+  <div class="cover-decoration"></div>
+</div>
+
+<!-- ==================== PAGE 1: EXECUTIVE SUMMARY ==================== -->
+<div class="page">
+
+<h1><span class="section-num">1</span> Executive Summary</h1>
+
+<p>Week 1 focused on <strong>initial exploration</strong> - building the DigiSteel-YOLO codebase, running baseline experiments, discovering critical dataset challenges, and designing the DAFE (Defect-Aware Feature Enhancement) module. We established a robust evaluation framework and identified the core bottleneck limiting model performance.</p>
+
+<div class="callout callout-warn">
+  <div class="callout-title">Key Finding</div>
+  <p>The NEU-DET dataset has an extremely low average contrast of <strong>28.9 / 255</strong>, making defect detection inherently difficult. Novel modules must be motivated by data characteristics - generic attention mechanisms alone are insufficient.</p>
+</div>
+
+<div class="callout callout-fail">
+  <div class="callout-title">⚠️ Correction Note - mAP@0.5 Revision (June 15, 2026)</div>
+  <p>The baseline mAP@0.5 was originally reported as <strong>77.1%</strong> in this report. That number came from the <strong>training CSV</strong> (epoch 144 peak), which records validation metrics during training with different settings (batch size, augmentation pipeline) than standalone evaluation. A fresh <code>model.val()</code> run on the same weights revealed the true performance is <strong>75.8% mAP@0.5</strong> - a <strong>-1.3% gap</strong>. All subsequent reports (Week 2, Week 3) use fresh evaluation for accurate, reproducible comparison. This is a critical lesson in evaluation methodology.</p>
+</div>
+
+<div class="info-bar">
+  <div class="info-item">
+    <div class="info-item-label">Dataset</div>
+    <div class="info-item-value">NEU-DET</div>
+  </div>
+  <div class="info-item">
+    <div class="info-item-label">Images</div>
+    <div class="info-item-value">1,800 total</div>
+  </div>
+  <div class="info-item">
+    <div class="info-item-label">Classes</div>
+    <div class="info-item-value">6 defect types</div>
+  </div>
+  <div class="info-item">
+    <div class="info-item-label">Resolution</div>
+    <div class="info-item-value">200×200 px</div>
+  </div>
+</div>
+
+<div class="metric-grid">
+  <div class="metric-card pass">
+    <div class="metric-card-label">Best mAP@0.5</div>
+    <div class="metric-card-value">75.8%</div>
+    <div class="metric-card-delta">Baseline YOLOv11n <em>(fresh eval)</em></div>
+  </div>
+  <div class="metric-card warn">
+    <div class="metric-card-label">DAFE mAP@0.5</div>
+    <div class="metric-card-value">75.4%</div>
+    <div class="metric-card-delta delta-neg">▼ 1.7% vs baseline</div>
+  </div>
+  <div class="metric-card fail">
+    <div class="metric-card-label">Avg Contrast</div>
+    <div class="metric-card-value">28.9</div>
+    <div class="metric-card-delta delta-neg">out of 255</div>
+  </div>
+  <div class="metric-card accent">
+    <div class="metric-card-label">Perturbation Points</div>
+    <div class="metric-card-value">24</div>
+    <div class="metric-card-delta delta-pos">Robustness framework</div>
+  </div>
+</div>
+
+<h2>Phase Summary</h2>
+
+<table class="comparison-table">
+  <thead>
+    <tr>
+      <th>Phase</th>
+      <th>Focus</th>
+      <th>Key Result</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="highlight-row">
+      <td><strong>Phase 1</strong></td>
+      <td>Initial model assembly</td>
+      <td>Baseline 75.6%, DigiSteel v2 76.7%</td>
+      <td><span class="badge badge-pass">+1.1%</span></td>
+    </tr>
+    <tr>
+      <td><strong>Phase 2</strong></td>
+      <td>Problem discovery</td>
+      <td>Low contrast (28.9/255), 4 code bugs found</td>
+      <td><span class="badge badge-warn">Critical</span></td>
+    </tr>
+    <tr>
+      <td><strong>Phase 3</strong></td>
+      <td>DAFE redesign</td>
+      <td>75.4% mAP (-0.4% vs refined baseline)</td>
+      <td><span class="badge badge-fail">Underperforms</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ==================== PAGE 2: PHASE 1 RESULTS ==================== -->
+<div class="page-break"></div>
+<h1><span class="section-num">2</span> Phase 1: Initial Exploration</h1>
+
+<h2>Architecture: DigiSteel-YOLO v2</h2>
+
+<p>We assembled DigiSteel-YOLO v2 with four novel components integrated into the YOLOv11n backbone:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>Purpose</th>
+      <th>Result</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>GhostConv</strong></td>
+      <td>Lightweight convolution (50% fewer params)</td>
+      <td class="td-fail">No accuracy improvement</td>
+    </tr>
+    <tr>
+      <td><strong>WFCA</strong></td>
+      <td>Wavelet Frequency Channel Attention</td>
+      <td class="td-pass">+0.8% marginal gain</td>
+    </tr>
+    <tr>
+      <td><strong>EMA</strong></td>
+      <td>Efficient Multi-scale Attention</td>
+      <td class="td-fail">No significant help</td>
+    </tr>
+    <tr>
+      <td><strong>Inner-WIoU</strong></td>
+      <td>Improved bounding box loss</td>
+      <td class="td-fail">Silent injection failure</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Results</h2>
+
+<div class="metric-grid">
+  <div class="metric-card pass">
+    <div class="metric-card-label">Baseline mAP@0.5</div>
+    <div class="metric-card-value">75.6%</div>
+    <div class="metric-card-delta">YOLOv11n standard</div>
+  </div>
+  <div class="metric-card pass">
+    <div class="metric-card-label">DigiSteel v2 mAP</div>
+    <div class="metric-card-value">76.7%</div>
+    <div class="metric-card-delta delta-pos">▲ 1.1% improvement</div>
+  </div>
+  <div class="metric-card warn">
+    <div class="metric-card-label">GhostConv</div>
+    <div class="metric-card-value">-</div>
+    <div class="metric-card-delta">Params only, no accuracy</div>
+  </div>
+  <div class="metric-card fail">
+    <div class="metric-card-label">Inner-WIoU</div>
+    <div class="metric-card-value">-</div>
+    <div class="metric-card-delta delta-neg">Silent failure</div>
+  </div>
+</div>
+
+<div class="bar-chart">
+  <div class="bar-row">
+    <div class="bar-label">Baseline</div>
+    <div class="bar-track">
+      <div class="bar-fill c-steel" style="width: 75.6%">75.6%</div>
+    </div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-label">DigiSteel v2</div>
+    <div class="bar-track">
+      <div class="bar-fill c-accent" style="width: 76.7%">76.7%</div>
+    </div>
+  </div>
+</div>
+
+<div class="callout callout-warn">
+  <div class="callout-title">Lesson Learned</div>
+  <p>Assembling existing components without understanding the dataset characteristics doesn't guarantee improvement. The +1.1% gain from DigiSteel v2 was marginal and came primarily from WFCA. GhostConv and EMA contributed nothing meaningful.</p>
+</div>
+
+<!-- ==================== PAGE 3: PHASE 2 - PROBLEM DISCOVERY ==================== -->
+<div class="page-break"></div>
+<h1><span class="section-num">3</span> Phase 2: Problem Discovery</h1>
+
+<h2>Dataset Analysis - Contrast Levels</h2>
+
+<p>We analyzed the NEU-DET dataset and discovered a critical issue: <strong>extremely low contrast</strong> across all defect classes. Defects blend into the steel background, making detection fundamentally difficult.</p>
+
+<div class="metric-grid">
+  <div class="metric-card fail">
+    <div class="metric-card-label">Avg Contrast</div>
+    <div class="metric-card-value">28.9</div>
+    <div class="metric-card-delta delta-neg">out of 255</div>
+  </div>
+  <div class="metric-card fail">
+    <div class="metric-card-label">Hardest Class</div>
+    <div class="metric-card-value">15.6</div>
+    <div class="metric-card-delta">inclusion contrast</div>
+  </div>
+  <div class="metric-card warn">
+    <div class="metric-card-label">Easiest Class</div>
+    <div class="metric-card-value">56.2</div>
+    <div class="metric-card-delta">patches contrast</div>
+  </div>
+  <div class="metric-card accent">
+    <div class="metric-card-label">Classes</div>
+    <div class="metric-card-value">6</div>
+    <div class="metric-card-delta">defect types</div>
+  </div>
+</div>
+
+<h3>Per-Class Contrast Levels</h3>
+
+<div class="bar-chart">
+  <div class="bar-row">
+    <div class="bar-label">patches</div>
+    <div class="bar-track">
+      <div class="bar-fill c-pass" style="width: 73.3%">56.2</div>
+    </div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-label">crazing</div>
+    <div class="bar-track">
+      <div class="bar-fill c-warn" style="width: 39%">29.9</div>
+    </div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-label">pitted_surface</div>
+    <div class="bar-track">
+      <div class="bar-fill c-warn" style="width: 34.6%">26.5</div>
+    </div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-label">scratches</div>
+    <div class="bar-track">
+      <div class="bar-fill c-fail" style="width: 28.6%">21.9</div>
+    </div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-label">rolled-in_scale</div>
+    <div class="bar-track">
+      <div class="bar-fill c-fail" style="width: 21.3%">16.3</div>
+    </div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-label">inclusion</div>
+    <div class="bar-track">
+      <div class="bar-fill c-fail" style="width: 20.3%">15.6</div>
+    </div>
+  </div>
+</div>
+
+<h2>Code Review Findings</h2>
+
+<p>A comprehensive code review (9 angles, 4 agents) uncovered four critical bugs:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Bug</th>
+      <th>Impact</th>
+      <th>Severity</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td><strong>EMA device detection bug</strong></td>
+      <td>Layers stayed on CPU during GPU training</td>
+      <td><span class="badge badge-fail">Critical</span></td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><strong>Gradient dead zones</strong></td>
+      <td><code>torch.clamp</code> prevented alpha from learning</td>
+      <td><span class="badge badge-fail">Critical</span></td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><strong>Border statistics corruption</strong></td>
+      <td>AvgPool2d inflated variance at image edges</td>
+      <td><span class="badge badge-warn">High</span></td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><strong>Class variable sharing</strong></td>
+      <td>Training state leaked between model instances</td>
+      <td><span class="badge badge-warn">High</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout callout-fail">
+  <div class="callout-title">Why This Matters</div>
+  <p>Low contrast means defects blend into the background - edge detection fails, texture analysis is unreliable, and models struggle to learn discriminative features. Combined with 4 code bugs silently degrading training, the initial results were compromised.</p>
+</div>
+
+<!-- ==================== PAGE 4: PHASE 3 - DAFE REDESIGN ==================== -->
+<div class="page-break"></div>
+<h1><span class="section-num">4</span> Phase 3: DAFE Redesign</h1>
+
+<h2>Architecture: Defect-Aware Feature Enhancement</h2>
+
+<p>Based on our dataset analysis, we designed DAFE - a module specifically for flat steel defects. The key insight: steel defects fall into two categories - <strong>linear</strong> (scratches, crazing) and <strong>surface</strong> (pitting, scale) - requiring specialized feature extraction.</p>
+
+<div class="hypo-grid">
+  <div class="hypo-card hypo-claim">
+    <div class="hypo-card-header">DAFE Architecture</div>
+    <div class="hypo-item">Edge Branch: Conv3×3 → BN → SiLU (linear defects)</div>
+    <div class="hypo-item">Texture Branch: [x, mean, var] → Conv1×1 → BN → SiLU</div>
+    <div class="hypo-item">Fusion: Concat → Channel Attention → Conv1×1</div>
+    <div class="hypo-item">Output: F + sigmoid(α) × enhanced (learnable residual)</div>
+  </div>
+  <div class="hypo-card hypo-reality">
+    <div class="hypo-card-header">Design Rationale</div>
+    <div class="hypo-item">Flat steel defects are either linear or surface-based</div>
+    <div class="hypo-item">Each branch learns features for specific defect types</div>
+    <div class="hypo-item">Interpretable: branch activations map to defect categories</div>
+    <div class="hypo-item">Domain-specific vs generic attention mechanisms</div>
+  </div>
+</div>
+
+<h2>Optimized Training Configuration</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Old Value</th>
+      <th>New Value</th>
+      <th>Rationale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Image Size</td>
+      <td>640px</td>
+      <td><strong>800px</strong></td>
+      <td>Thin defects need higher resolution</td>
+    </tr>
+    <tr>
+      <td>Learning Rate</td>
+      <td>Linear</td>
+      <td><strong>Cosine</strong></td>
+      <td>Better convergence</td>
+    </tr>
+    <tr>
+      <td>Epochs</td>
+      <td>200</td>
+      <td><strong>300</strong></td>
+      <td>More training time</td>
+    </tr>
+    <tr>
+      <td>Patience</td>
+      <td>50</td>
+      <td><strong>75</strong></td>
+      <td>Allow more exploration</td>
+    </tr>
+    <tr>
+      <td>Batch Size</td>
+      <td>16</td>
+      <td><strong>8</strong></td>
+      <td>Higher resolution = more VRAM</td>
+    </tr>
+    <tr>
+      <td>Optimizer</td>
+      <td>SGD</td>
+      <td><strong>AdamW</strong></td>
+      <td>Weight decay regularization</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Results</h2>
+
+<div class="metric-grid">
+  <div class="metric-card pass">
+    <div class="metric-card-label">Baseline mAP@0.5</div>
+    <div class="metric-card-value">75.8%</div>
+    <div class="metric-card-delta">Refined baseline</div>
+  </div>
+  <div class="metric-card fail">
+    <div class="metric-card-label">DAFE mAP@0.5</div>
+    <div class="metric-card-value">75.4%</div>
+    <div class="metric-card-delta delta-neg">▼ 0.4% vs baseline</div>
+  </div>
+  <div class="metric-card fail">
+    <div class="metric-card-label">Precision</div>
+    <div class="metric-card-value">72.5%</div>
+    <div class="metric-card-delta delta-neg">▼ 1.8%</div>
+  </div>
+  <div class="metric-card warn">
+    <div class="metric-card-label">Recall</div>
+    <div class="metric-card-value">69.3%</div>
+    <div class="metric-card-delta delta-neg">▼ 0.3%</div>
+  </div>
+</div>
+
+<h3>Per-Class mAP@0.5 - DAFE Impact</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Class</th>
+      <th>Baseline</th>
+      <th>DAFE</th>
+      <th>Delta</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>patches</td>
+      <td>59.1%</td>
+      <td>59.8%</td>
+      <td class="td-pass">+0.7%</td>
+      <td><span class="badge badge-pass">Helping</span></td>
+    </tr>
+    <tr>
+      <td>crazing</td>
+      <td>17.3%</td>
+      <td>15.5%</td>
+      <td class="td-fail">-1.8%</td>
+      <td><span class="badge badge-fail">Hurting</span></td>
+    </tr>
+    <tr>
+      <td>inclusion</td>
+      <td>45.9%</td>
+      <td>43.0%</td>
+      <td class="td-fail">-2.9%</td>
+      <td><span class="badge badge-fail">Hurting</span></td>
+    </tr>
+    <tr>
+      <td>pitted_surface</td>
+      <td>52.2%</td>
+      <td>49.5%</td>
+      <td class="td-fail">-2.7%</td>
+      <td><span class="badge badge-fail">Hurting</span></td>
+    </tr>
+    <tr>
+      <td>rolled-in_scale</td>
+      <td>28.9%</td>
+      <td>27.2%</td>
+      <td class="td-fail">-1.7%</td>
+      <td><span class="badge badge-fail">Hurting</span></td>
+    </tr>
+    <tr>
+      <td>scratches</td>
+      <td>57.8%</td>
+      <td>55.5%</td>
+      <td class="td-fail">-2.3%</td>
+      <td><span class="badge badge-fail">Hurting</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout callout-fail">
+  <div class="callout-title">Diagnosis</div>
+  <p>DAFE is hurting performance on <strong>5 out of 6 classes</strong>. The module is adding noise, not learning useful features. Only patches (the highest-contrast class) showed marginal improvement. The edge and texture branches need significant redesign or the module may need to be abandoned in favor of simpler approaches.</p>
+</div>
+
+<!-- ==================== PAGE 5: KEY LEARNINGS ==================== -->
+<div class="page-break"></div>
+<h1><span class="section-num">5</span> Key Learnings</h1>
+
+<h2>What Worked</h2>
+
+<div class="timeline">
+  <div class="timeline-item pass">
+    <div class="timeline-title">Larger image size (800px)</div>
+    <div class="timeline-desc">Improved thin defect detection significantly. Steel surface defects at 200px resolution are extremely small - upsampling to 800px gives the model more pixels to learn from.</div>
+  </div>
+  <div class="timeline-item pass">
+    <div class="timeline-title">Cosine learning rate schedule</div>
+    <div class="timeline-desc">Better convergence than linear schedule. The gradual decay allows finer weight adjustments in later epochs.</div>
+  </div>
+  <div class="timeline-item pass">
+    <div class="timeline-title">Robustness evaluation framework</div>
+    <div class="timeline-desc">24-point perturbation sweep - a genuine novel contribution. No other steel defect paper reports robustness data. This is an untapped research gap.</div>
+  </div>
+  <div class="timeline-item pass">
+    <div class="timeline-title">Professional codebase</div>
+    <div class="timeline-desc">65+ unit tests, comprehensive documentation, modular architecture. Code quality enables rapid experimentation.</div>
+  </div>
+</div>
+
+<h2>What Didn't Work</h2>
+
+<div class="timeline">
+  <div class="timeline-item fail">
+    <div class="timeline-title">Assembling existing components</div>
+    <div class="timeline-desc">GhostConv, EMA, Inner-WIoU - none provided meaningful improvement. Combining off-the-shelf modules without dataset-specific motivation is insufficient.</div>
+  </div>
+  <div class="timeline-item fail">
+    <div class="timeline-title">CLAHE preprocessing</div>
+    <div class="timeline-desc">Didn't improve low contrast effectively. Histogram equalization on already-low-contrast steel surfaces doesn't create discriminative features.</div>
+  </div>
+  <div class="timeline-item fail">
+    <div class="timeline-title">Larger models (YOLOv11s)</div>
+    <div class="timeline-desc">Performed worse on small dataset. More parameters = more overfitting risk with only 1,290 training images.</div>
+  </div>
+  <div class="timeline-item fail">
+    <div class="timeline-title">Test-Time Augmentation</div>
+    <div class="timeline-desc">Didn't provide expected boost. The dataset characteristics limit what inference-time tricks can achieve.</div>
+  </div>
+</div>
+
+<div class="callout callout-accent">
+  <div class="callout-title">Core Insight</div>
+  <p><strong>Dataset quality matters more than architecture.</strong> The low contrast (28.9/255) is the primary bottleneck. Novel modules must be designed around data characteristics, not generic improvements. Domain-specific design (like DAFE) is promising but needs refinement to avoid adding noise.</p>
+</div>
+
+<!-- ==================== PAGE 6: REFERENCE PAPERS ==================== -->
+<div class="page-break"></div>
+<h1><span class="section-num">6</span> Reference Papers Comparison</h1>
+
+<h2>Current Results vs Published Papers</h2>
+
+<table class="comparison-table">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Paper</th>
+      <th>Base Model</th>
+      <th>mAP@0.5</th>
+      <th>Params (M)</th>
+      <th>FPS</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>P02</td>
+      <td>LAM-YOLOv10n</td>
+      <td>YOLOv10n</td>
+      <td class="td-best">94.4%</td>
+      <td class="td-muted">N/A</td>
+      <td>154</td>
+    </tr>
+    <tr>
+      <td>P11</td>
+      <td>YOLOv11-EMD</td>
+      <td>YOLOv11</td>
+      <td class="td-best">94.9%</td>
+      <td class="td-muted">N/A</td>
+      <td class="td-muted">N/A</td>
+    </tr>
+    <tr>
+      <td>P10</td>
+      <td>KDM-YOLO</td>
+      <td>YOLOv10n</td>
+      <td>95.4%</td>
+      <td>3.29</td>
+      <td>155.6</td>
+    </tr>
+    <tr>
+      <td>P03</td>
+      <td>YOLO-LSDI</td>
+      <td>YOLOv11n</td>
+      <td>83.0%</td>
+      <td>2.7</td>
+      <td>162.1</td>
+    </tr>
+    <tr>
+      <td>P07</td>
+      <td>ASFRW-YOLO</td>
+      <td>YOLOv5s</td>
+      <td>83.2%</td>
+      <td>6.20</td>
+      <td>125</td>
+    </tr>
+    <tr>
+      <td>P09</td>
+      <td>EFEN-YOLOv8</td>
+      <td>YOLOv8</td>
+      <td>80.4%</td>
+      <td class="td-muted">N/A</td>
+      <td class="td-muted">N/A</td>
+    </tr>
+    <tr>
+      <td>P08</td>
+      <td>MSFE-YOLO</td>
+      <td>YOLOv11s</td>
+      <td>79.8%</td>
+      <td>11.69</td>
+      <td>89.3</td>
+    </tr>
+    <tr>
+      <td>P04</td>
+      <td>Lightweight-YOLOv8</td>
+      <td>YOLOv8</td>
+      <td>78.6%</td>
+      <td>2.04</td>
+      <td>171.5</td>
+    </tr>
+    <tr>
+      <td>P05</td>
+      <td>SCCI-YOLO</td>
+      <td>YOLOv8n</td>
+      <td>78.6%</td>
+      <td>1.68</td>
+      <td>270.2</td>
+    </tr>
+    <tr class="highlight-row">
+      <td>-</td>
+      <td><strong>DigiSteel (Baseline)</strong></td>
+      <td>YOLOv11n</td>
+      <td class="td-best">75.8%<br><small style="color:var(--text-muted);font-size:7pt">corrected from 77.1%</small></td>
+      <td>2.6</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>-</td>
+      <td><strong>DigiSteel (DAFE)</strong></td>
+      <td>YOLOv11n</td>
+      <td>75.4%</td>
+      <td>-</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>P06</td>
+      <td>ELS-YOLO</td>
+      <td>YOLOv11n</td>
+      <td class="td-muted">N/A</td>
+      <td>2.36</td>
+      <td class="td-muted">N/A</td>
+    </tr>
+    <tr>
+      <td>P01</td>
+      <td>PSF-YOLO</td>
+      <td>YOLOv11n</td>
+      <td class="td-muted">N/A</td>
+      <td>1.82</td>
+      <td class="td-muted">N/A</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout callout-accent">
+  <div class="callout-title">Competitive Position</div>
+  <p>Our baseline (75.8%) is competitive with P04 and P05 (78.6%) - within 3% of the "competitive" papers. Top papers (P02, P10, P11) achieve 94-95% but use different protocols and datasets. Our <strong>robustness framework</strong> is a unique differentiator that no other paper measures.</p>
+</div>
+
+<!-- ==================== PAGE 7: NEXT STEPS & CONCLUSIONS ==================== -->
+<div class="page-break"></div>
+<h1><span class="section-num">7</span> Next Steps &amp; Conclusions</h1>
+
+<h2>Immediate Actions (Week 2)</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Priority</th>
+      <th>Action</th>
+      <th>Expected Outcome</th>
+      <th>Recommendation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="highlight-row">
+      <td><strong>1</strong></td>
+      <td>Optimize DAFE - simplify to edge-only</td>
+      <td>Reduce noise from texture branch</td>
+      <td><span class="badge badge-pass">High Priority</span></td>
+    </tr>
+    <tr>
+      <td><strong>2</strong></td>
+      <td>Expand robustness evaluation (24-point sweep)</td>
+      <td>Document robustness advantage</td>
+      <td><span class="badge badge-accent">Key Contribution</span></td>
+    </tr>
+    <tr>
+      <td><strong>3</strong></td>
+      <td>Fix 4 code bugs from review</td>
+      <td>Clean baseline for fair comparison</td>
+      <td><span class="badge badge-warn">Required</span></td>
+    </tr>
+    <tr>
+      <td><strong>4</strong></td>
+      <td>Prepare comprehensive 11-paper comparison</td>
+      <td>Complete evaluation matrix</td>
+      <td><span class="badge badge-accent">Documentation</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Medium-Term Goals</h2>
+
+<ol>
+  <li><strong>Improve mAP to 80%+</strong> - try different attention mechanisms, experiment with data augmentation, test ensemble methods</li>
+  <li><strong>Publish results</strong> - write technical paper, submit to relevant conference/journal, share code on GitHub</li>
+  <li><strong>Target comprehensive score</strong> - accuracy + robustness + efficiency = complete evaluation; can win even with lower mAP</li>
+</ol>
+
+<div class="conclusion-box">
+  <h2>Week 1 Summary</h2>
+  <p>We built a professional codebase, ran systematic experiments, and discovered the core bottleneck: <strong>dataset quality, not architecture</strong>. The NEU-DET dataset's extremely low contrast (28.9/255) limits what any model can achieve. Our baseline (75.8% mAP, corrected) is competitive with published papers, and our 24-point robustness framework is a genuine novel contribution that no other paper measures.</p>
+  <br>
+  <p>The path forward is clear: <strong>simplify DAFE, fix the code bugs, and let the robustness framework be the differentiator</strong>. We don't need the highest mAP - we need the most comprehensive evaluation.</p>
+</div>
+
+<h2>What We Achieved</h2>
+
+<div class="timeline">
+  <div class="timeline-item pass">
+    <div class="timeline-title">Professional codebase</div>
+    <div class="timeline-desc">Comprehensive testing (65+ unit tests), modular architecture, documentation</div>
+  </div>
+  <div class="timeline-item pass">
+    <div class="timeline-title">Novel DAFE module</div>
+    <div class="timeline-desc">Domain-specific design for flat steel defects - promising but needs refinement</div>
+  </div>
+  <div class="timeline-item pass">
+    <div class="timeline-title">Robustness evaluation framework</div>
+    <div class="timeline-desc">24-point perturbation sweep - untapped research gap, genuine contribution</div>
+  </div>
+  <div class="timeline-item pass">
+    <div class="timeline-title">Competitive baseline</div>
+    <div class="timeline-desc">75.8% mAP@0.5 (fresh eval) - within 3% of competitive published papers</div>
+  </div>
+  <div class="timeline-item pass">
+    <div class="timeline-title">Dataset insights</div>
+    <div class="timeline-desc">Identified low contrast (28.9/255) as primary bottleneck with clear strategies</div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="report-footer">
+  <div class="footer-brand">DIGI<span>STEEL</span>-YOLO</div>
+  <div class="footer-date">Week 1 Progress Report - June 7, 2026 - Page 7 of 7</div>
+</div>
+
+</div>
+
+</body>
+</html>

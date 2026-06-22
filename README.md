@@ -1,11 +1,5 @@
 <!-- DigiSteel-YOLO Banner -->
 <div align="center">
-  <a href="https://github.com/hazemelerefey/DigiSteel-YOLO">
-    <img src="assets/banner.png" alt="DigiSteel-YOLO Banner" width="100%" height="auto" />
-  </a>
-</div>
-
----
 
 # DigiSteel-YOLO
 

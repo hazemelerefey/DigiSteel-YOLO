@@ -9,6 +9,7 @@ Provides:
 - InnerWIoULoss: Composite IoU loss (Zhang 2023 + Tong 2023)
 """
 
+from digisteel.modules.coord_attention import CoordAttention
 from digisteel.modules.dafe import DAFE, DAFEEdgeOnly
 from digisteel.modules.ema import EMA
 from digisteel.modules.ghost_conv import GhostConv, GhostModule
@@ -16,6 +17,7 @@ from digisteel.modules.inner_wiou import InnerWIoULoss, inner_iou_loss, inner_wi
 from digisteel.modules.wfca import WFCA
 
 __all__ = [
+    "CoordAttention",
     "DAFE",
     "EMA",
     "GhostConv",

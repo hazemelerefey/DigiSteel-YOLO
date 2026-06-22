@@ -1,3 +1,7 @@
+# === CLAUDE CODE SESSION FILES ===
+.claude/
+digisteel/claude/
+
 # === DATASETS (NEVER commit — too large, license restrictions) ===
 datasets/
 *.zip
@@ -42,6 +46,12 @@ Thumbs.db
 .project
 .pydevproject
 .settings/
+
+# === VIRTUAL ENVIRONMENT ===
+venv/
+.venv/
+env/
+setup_done.flag
 
 # === PYTHON ===
 __pycache__/

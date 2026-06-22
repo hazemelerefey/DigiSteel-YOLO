@@ -1,7 +1,7 @@
 # NEU-DET Dataset Configuration for YOLOv11
 # 6 defect classes, 200x200 grayscale images
 
-path: datasets/NEU-DET/yolo
+path: D:/DigiSteel-Yolo/DigiSteel-YOLO/datasets/NEU-DET/yolo
 train: images/train
 val: images/val
 test: images/test
