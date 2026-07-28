@@ -1,40 +1,53 @@
 # Ultralytics YOLO, AGPL-3.0 license
 # YOLOv11 object detection model with DAFEGate v4 at P3 only.
+#
+# Architecture: Backbone (feature extraction) → Neck (FPN/PAN fusion) → Head (detection)
+# Custom module: DAFEGate v4 at P3 — dual-branch (edge + texture) with additive residual
 
 nc: 6 # number of classes (NEU-DET)
 scales:
   n: [0.50, 0.25, 1024] # [depth, width, max_channels]
 
+# ─── BACKBONE: Feature Extraction (layers 0–11) ─────────────────────
+# Extracts multi-scale features: P1(1/2), P2(1/4), P3(1/8), P4(1/16), P5(1/32)
 backbone:
   # [from, repeats, module, args]
-  - [-1, 1, Conv, [64, 3, 2]] # 0-P1/2
-  - [-1, 1, Conv, [128, 3, 2]] # 1-P2/4
-  - [-1, 2, C3k2, [256, False, 0.25]] # 2
-  - [-1, 1, Conv, [256, 3, 2]] # 3-P3/8
-  - [-1, 2, C3k2, [512, False, 0.25]] # 4
-  - [-1, 1, DAFEGate, []] # 5: DAFEGate v4 modulating P3 (additive residual, dual-branch)
-  - [-1, 1, Conv, [512, 3, 2]] # 6-P4/16
-  - [-1, 2, C3k2, [512, True]] # 7
-  - [-1, 1, Conv, [1024, 3, 2]] # 8-P5/32
-  - [-1, 2, C3k2, [1024, True]] # 9
-  - [-1, 1, SPPF, [1024, 5]] # 10
-  - [-1, 2, C2PSA, [1024]] # 11
+  - [-1, 1, Conv, [64, 3, 2]]            #  0  P1/2  (320×320, 64ch)
+  - [-1, 1, Conv, [128, 3, 2]]           #  1  P2/4  (160×160, 128ch)
+  - [-1, 2, C3k2, [256, False, 0.25]]    #  2         (160×160, 256ch)
+  - [-1, 1, Conv, [256, 3, 2]]           #  3  P3/8  (80×80, 256ch)
+  - [-1, 2, C3k2, [512, False, 0.25]]    #  4         (80×80, 512ch)
+  - [-1, 1, DAFEGate, []]                #  5  ★ DAFEGate v4 at P3 — dual-branch enhancement
+  - [-1, 1, Conv, [512, 3, 2]]           #  6  P4/16 (40×40, 512ch)
+  - [-1, 2, C3k2, [512, True]]           #  7         (40×40, 512ch)
+  - [-1, 1, Conv, [1024, 3, 2]]          #  8  P5/32 (20×20, 1024ch)
+  - [-1, 2, C3k2, [1024, True]]          #  9         (20×20, 1024ch)
+  - [-1, 1, SPPF, [1024, 5]]             # 10         (20×20, 1024ch)
+  - [-1, 2, C2PSA, [1024]]               # 11         (20×20, 1024ch)
 
+# ─── NECK: FPN/PAN Feature Fusion (layers 12–23) ─────────────────────
+# FPN top-down: P5→P4→P3 (semantics flow to small-scale features)
+# PAN bottom-up: P3→P4→P5 (localization flows to large-scale features)
+#
+# NOTE: Ultralytics requires these under "head:" key — they are architecturally the neck.
 head:
-  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # 12
-  - [[-1, 7], 1, Concat, [1]] # 13 cat backbone P4
-  - [-1, 2, C3k2, [512, False]] # 14
+  # ── FPN Top-Down Path ──
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]   # 12  P5 upsampled to 40×40
+  - [[-1, 7], 1, Concat, [1]]                     # 13  cat backbone P4 (40×40, 1024ch)
+  - [-1, 2, C3k2, [512, False]]                   # 14  P4 refined (40×40, 512ch)
 
-  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # 15
-  - [[-1, 4], 1, Concat, [1]] # 16 cat backbone P3
-  - [-1, 2, C3k2, [256, False]] # 17 (P3/8-small)
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]   # 15  P4 upsampled to 80×80
+  - [[-1, 4], 1, Concat, [1]]                     # 16  cat backbone P3 (80×80, 768ch)
+  - [-1, 2, C3k2, [256, False]]                   # 17  P3 refined (80×80, 256ch) ← small objects
 
-  - [-1, 1, Conv, [256, 3, 2]] # 18
-  - [[-1, 14], 1, Concat, [1]] # 19 cat head P4
-  - [-1, 2, C3k2, [512, False]] # 20 (P4/16-medium)
+  # ── PAN Bottom-Up Path ──
+  - [-1, 1, Conv, [256, 3, 2]]                    # 18  P3 downsampled to 40×40
+  - [[-1, 14], 1, Concat, [1]]                    # 19  cat FPN P4 (40×40, 768ch)
+  - [-1, 2, C3k2, [512, False]]                   # 20  P4 enhanced (40×40, 512ch) ← medium objects
 
-  - [-1, 1, Conv, [512, 3, 2]] # 21
-  - [[-1, 11], 1, Concat, [1]] # 22 cat head P5
-  - [-1, 2, C3k2, [1024, True]] # 23 (P5/32-large)
+  - [-1, 1, Conv, [512, 3, 2]]                    # 21  P4 downsampled to 20×20
+  - [[-1, 11], 1, Concat, [1]]                    # 22  cat backbone P5 (20×20, 1536ch)
+  - [-1, 2, C3k2, [1024, True]]                   # 23  P5 enhanced (20×20, 1024ch) ← large objects
 
-  - [[17, 20, 23], 1, Detect, [nc]] # 24 Detect(P3, P4, P5)
+# ─── HEAD: Detection ─────────────────────────────────────────────────
+  - [[17, 20, 23], 1, Detect, [nc]]               # 24  Detect(P3, P4, P5) → 6 classes
