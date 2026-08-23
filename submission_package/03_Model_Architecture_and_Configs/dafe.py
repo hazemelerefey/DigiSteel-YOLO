@@ -1,21 +1,28 @@
 """
-Defect-Aware Feature Enhancement Gate (DAFEGate) v4 Module.
+Defect-Aware Feature Enhancement Gate (DAFEGate) v4 — Final Model.
 
-Novel contribution of DigiSteel-YOLO for steel surface defect detection.
-Combines Sobel-initialized edge detection with local variance texture analysis
-in a dual-branch architecture with channel attention and additive residual.
+Novel contribution of DAFEGate-YOLO (DigiSteel Team) for hot-rolled flat steel
+surface defect detection. Combines Sobel-initialized edge detection with local
+variance texture analysis in a dual-branch architecture with channel attention
+and additive residual highway.
 
 Architecture:
     Edge branch (Sobel-initialized) → C//2 channels
     Texture branch (local variance) → C//2 channels
-    → Concat → Channel Attention → Fusion → Additive Residual
+    → Concat → SE Channel Attention → Fusion → Additive Residual
 
-Designed for NEU-DET (6 defect classes). Achieves 82.0% mAP@0.5 on test set.
+Dataset: NEU-DET (6 defect classes, 70/20/10 clean split)
+Result:  mAP@0.5 = 81.98% (+2.63pp over YOLOv11n baseline) | 145 FPS
 
 Classes exported:
     EdgeAwareConv  — Sobel-initialized convolution for linear defect detection
     TextureBranch  — Local variance for surface anomaly detection
     DAFEGate       — Full dual-branch module (Ultralytics-compatible)
+
+Team:       Hazem Elerefy, Youssef Sherif, Mohamed Salah, Moamen Esmat,
+            Mahmoud Hisham, Mohamed Awni
+Supervisor: Dr. Tarek Ghoneimy
+Product:    DigiSteel (Digilians / MCIT)
 """
 
 import torch

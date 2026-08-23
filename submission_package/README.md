@@ -1,7 +1,8 @@
-# 📦 DigiSteel-YOLO: Official Team Submission Package
+# 📦 DAFEGate-YOLO: Official Team Submission Package
 ### Complete Artifact Reference for Paper, Presentation & Project Submission
 
-This directory consolidates every official figure, benchmark report, ablation study, architecture configuration, model checkpoint, and deployment artifact referenced in the **DigiSteel Master Research Document**.
+**Product:** DigiSteel &nbsp;|&nbsp; **Model:** DAFEGate-YOLO &nbsp;|&nbsp; **Team:** DigiSteel Team  
+This directory consolidates every official figure, benchmark report, ablation study, architecture configuration, model checkpoint, and deployment artifact referenced in the **DAFEGate-YOLO Master Research Document**.
 
 ---
 

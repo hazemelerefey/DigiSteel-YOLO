@@ -1,26 +1,39 @@
 """
-Defect-Aware Feature Enhancement (DAFE) v2 Module.
+Defect-Aware Feature Enhancement Gate (DAFEGate) v4 — Final Model.
 
-Novel contribution of DigiSteel-YOLO. Specifically designed for flat steel
-surface defects, which fall into two categories:
+Novel contribution of DAFEGate-YOLO (DigiSteel Team) for hot-rolled flat steel
+surface defect detection. Specifically designed to handle the morphological
+duality between two fundamentally different defect categories:
 
-1. Linear defects (scratches, crazing): thin edges and cracks
-   -> Detected by the edge-aware branch (Sobel-initialized convolutions)
+  1. Linear defects (scratches, crazing): thin edges and cracks
+     -> Detected by the EdgeAwareConv branch (Sobel-initialized convolutions)
 
-2. Surface anomalies (pitting, scale, inclusions): texture irregularities
-   -> Detected by the texture-aware branch (local variance features)
+  2. Surface anomalies (pitting, scale, inclusions): texture irregularities
+     -> Detected by the TextureBranch (analytical local variance features)
 
-v2 improvements over v1:
-- EdgeBranch uses Sobel-initialized weights (actually edge-aware, not just a regular conv)
-- TextureBranch simplified to local variance only (fewer parameters)
-- No lazy initialization (all layers built in __init__)
-- Lower parameter count while maintaining expressiveness
+Key design decisions in DAFEGate v4 (vs. earlier versions):
+  - C/2 channel splitting: forces branch specialization (prevents convergence
+    to identical representations)
+  - Additive residual (y = x + sigmoid(alpha) * h): guarantees gradient flow
+    (dy/dx = 1.0) vs. multiplicative gate which suppresses gradients
+  - Squeeze-and-Excite channel attention (r=8): global feature recalibration
+  - P3-only placement: reduces overfitting on the 1,290-image training set
+
+Dataset: NEU-DET (6-class, 1,800 images, 70/20/10 clean split)
+Result:  mAP@0.5 = 81.98% (+2.63pp over YOLOv11n baseline, 145 FPS)
+
+Team:       Hazem Elerefy, Youssef Sherif, Mohamed Salah, Moamen Esmat,
+            Mahmoud Hisham, Mohamed Awni
+Supervisor: Dr. Tarek Ghoneimy
+Product:    DigiSteel (Digilians / MCIT)
 
 References:
-    - Closest related work:
-      ELS-YOLO (2025): Edge-focused enhancement, but single-branch
-      SCCI-YOLO (2025): Channel attention, not defect-type-aware
-      No existing work combines edge + texture awareness for steel defects
+    Closest related work:
+    - MSFE-YOLO (2026): Uses Sobel inside attention, but single-branch
+    - ELS-YOLO (2025): Edge-focused enhancement, single-branch only
+    - SCCI-YOLO (2025): Channel attention, not defect-type-aware
+    No existing NEU-DET model combines explicit dual edge+texture branches
+    with an additive residual skip connection.
 """
 
 import torch

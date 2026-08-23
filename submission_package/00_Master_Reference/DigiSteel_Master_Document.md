@@ -1,10 +1,11 @@
-# DigiSteel-YOLO: Master Research Document
+# DAFEGate-YOLO: Master Research Document
 ### Comprehensive Reference for Paper, Report & Presentation
 
-**Project:** Steel Surface Defect Detection with Defect-Aware Feature Enhancement (DAFE)  
+**Project:** DAFEGate-YOLO: Dual-Branch Defect-Aware Feature Enhancement for Real-Time Surface Defect Detection in Hot-Rolled Flat Steel Production  
+**Product:** DigiSteel  
 **Dataset:** NEU-DET (6-class, 1,800 images)  
 **Novel Contribution:** DAFEGate v4 — Dual-branch edge-and-texture module with additive residual  
-**Team:** Hazem Elerefy, Youssef Sherif, Mohamed Salah, Moamen Esmat, Mahmoud Hisham  
+**Team:** Hazem Elerefy, Youssef Sherif, Mohamed Salah, Moamen Esmat, Mahmoud Hisham, Mohamed Awni  
 **Supervisor:** Dr. Tarek Ghoneimy  
 **Final Result:** mAP@0.5 = **81.98%** (+2.63pp over strong optimized baseline)
 

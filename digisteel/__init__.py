@@ -1,22 +1,23 @@
 """
-DigiSteel-YOLO v2: Comprehensive Robustness Study of Lightweight YOLO Detectors
-for Steel Surface Defect Detection.
+DAFEGate-YOLO: Dual-Branch Defect-Aware Feature Enhancement for Real-Time
+Surface Defect Detection in Hot-Rolled Flat Steel Production.
 
-This package provides:
-- WFCA: Wavelet Frequency Channel Attention (novel contribution)
-- GhostConv: Lightweight convolution module (Han et al., CVPR 2020)
-- EMA: Efficient Multi-scale Attention (Ouyang et al., ICASSP 2023)
-- InnerWIoULoss: Composite IoU loss (Zhang 2023 + Tong 2023)
-- Perturbation toolkit: Standardized image degradation for robustness testing
-- Evaluation framework: Multi-metric robustness evaluation
+Product: DigiSteel
+Novel Contribution: DAFEGate v4 — Dual-branch Sobel-initialized edge detection
+    and local variance texture analysis with channel attention and additive
+    residual highway for morphology-specialized steel defect feature extraction.
 
-Team: Hazem Elerefy, Youssef Sherif, Mohamed Salah, Moamen Esmat, Mahmoud Hisham
+Dataset: NEU-DET (6-class, 1,800 images, 70/20/10 clean protocol)
+Result:  mAP@0.5 = 81.98% (+2.63pp over optimized YOLOv11n baseline)
+
+Team: Hazem Elerefy, Youssef Sherif, Mohamed Salah, Moamen Esmat,
+      Mahmoud Hisham, Mohamed Awni
 Supervisor: Dr. Tarek Ghoneimy
 Program: Digilians (MCIT) Specialized Diploma in Applied AI & Data Analytics
 """
 
-__version__ = "2.0.0"
-__author__ = "DigiSteel-YOLO Team"
+__version__ = "4.0.0"
+__author__ = "DigiSteel Team"
 
 from digisteel.modules.ema import EMA
 from digisteel.modules.ghost_conv import GhostConv, GhostModule

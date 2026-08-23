@@ -1,3 +1,13 @@
+"""
+DAFEGate v4 — Defect-Aware Feature Enhancement Gate (HuggingFace Space Module).
+
+Product:    DigiSteel | Model: DAFEGate-YOLO
+Team:       Hazem Elerefy, Youssef Sherif, Mohamed Salah, Moamen Esmat,
+            Mahmoud Hisham, Mohamed Awni
+Supervisor: Dr. Tarek Ghoneimy
+Demo:       https://huggingface.co/spaces/hazemelerefy/DigiSteel-YOLO
+"""
+
 from __future__ import annotations
 
 import torch
