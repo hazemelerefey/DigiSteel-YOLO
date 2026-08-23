@@ -1,0 +1,55 @@
+# DigiSteel-YOLO Architecture (C3k2 variant)
+# YOLOv11n + DAFE (Defect-Aware Feature Enhancement)
+#
+# This variant uses C3k2 blocks (same as yolo11n.pt) instead of C2f.
+# This allows DIRECT weight transfer from transfer learning models
+# trained with yolo11n.pt architecture.
+#
+# Use case: Transfer Learning + DAFE
+#   1. Train baseline with yolo11n.pt (get 79.4% mAP)
+#   2. Load this YAML + transfer TL weights (C3k2 layers match!)
+#   3. DAFE modules initialize randomly
+#   4. Fine-tune → DAFE learns on top of strong baseline
+#
+# IMPORTANT: Register custom modules before loading this config:
+#   from digisteel.modules import DAFE
+#   tasks.DAFE = DAFE
+
+nc: 6
+scales:
+  n: [0.50, 0.25, 1024]  # YOLO11n scale factors
+
+# Backbone: YOLOv11n (C3k2) + DAFE at P2 and P3
+backbone:
+  - [-1, 1, Conv, [64, 3, 2]]     # 0-P1/2   (320x320 @ imgsz=640)
+  - [-1, 1, Conv, [128, 3, 2]]    # 1-P2/4   (160x160)
+  - [-1, 1, C3k2, [128, True]]    # 2  ← C3k2 (matches yolo11n.pt!)
+  - [-1, 1, DAFE, [128, 8]]       # 3  DAFE at P2: reduction=8
+  - [-1, 1, Conv, [256, 3, 2]]    # 4-P3/8   (80x80)
+  - [-1, 1, C3k2, [256, True]]    # 5  ← C3k2 (matches yolo11n.pt!)
+  - [-1, 1, DAFE, [256, 8]]       # 6  DAFE at P3: reduction=8
+  - [-1, 1, Conv, [512, 3, 2]]    # 7-P4/16  (40x40)
+  - [-1, 1, C3k2, [512, True]]    # 8  ← C3k2 (matches yolo11n.pt!)
+  - [-1, 1, Conv, [1024, 3, 2]]   # 9-P5/32  (20x20)
+  - [-1, 1, C3k2, [1024, True]]   # 10 ← C3k2 (matches yolo11n.pt!)
+  - [-1, 1, SPPF, [1024, 5]]      # 11
+
+# Neck: PAN-FPN with C3k2 (matches yolo11n.pt!)
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 12
+  - [[-1, 8], 1, Concat, [1]]                     # 13  cat P4
+  - [-1, 1, C3k2, [512]]                          # 14  ← C3k2!
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 15
+  - [[-1, 6], 1, Concat, [1]]                     # 16  cat P3 (after DAFE)
+  - [-1, 1, C3k2, [256]]                          # 17  ← C3k2!
+
+  - [-1, 1, Conv, [256, 3, 2]]                    # 18  downsample
+  - [[-1, 14], 1, Concat, [1]]                    # 19  cat P4
+  - [-1, 1, C3k2, [512]]                          # 20  ← C3k2!
+
+  - [-1, 1, Conv, [512, 3, 2]]                    # 21  downsample
+  - [[-1, 11], 1, Concat, [1]]                    # 22  cat P5 (SPPF)
+  - [-1, 1, C3k2, [1024]]                         # 23  ← C3k2!
+
+  - [[17, 20, 23], 1, Detect, [nc]]               # 24  Detect

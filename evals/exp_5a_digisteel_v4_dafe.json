@@ -3,21 +3,21 @@
   "architecture": "YOLOv11n + DAFE (P2 + P3)",
   "model": "yolo11n",
   "weights": "D:\\DigiSteel-Yolo\\DigiSteel-YOLO\\runs\\detect\\exp_5a_digisteel_v4_dafe\\weights\\best.pt",
-  "map50": 0.8031775649037852,
-  "map50_95": 0.44190489988201515,
-  "precision": 0.8518851936899381,
-  "recall": 0.6997393113450499,
+  "map50": 0.7890981662924115,
+  "map50_95": 0.44640042293065385,
+  "precision": 0.768952627204865,
+  "recall": 0.7022113414245945,
   "per_class_ap50": {
-    "crazing": 0.48635625775040575,
-    "inclusion": 0.8652216080763095,
-    "patches": 0.8852165661696936,
-    "pitted_surface": 0.8165298948499148,
-    "rolled-in_scale": 0.7794351221400126,
-    "scratches": 0.9863059404363752
+    "crazing": 0.3261727990798791,
+    "inclusion": 0.9071892587110736,
+    "patches": 0.8904312487778729,
+    "pitted_surface": 0.8243453887463943,
+    "rolled-in_scale": 0.7940084419741327,
+    "scratches": 0.9924418604651162
   },
-  "training_time_hours": 3.51,
+  "training_time_hours": 4.25,
   "copy_paste_used": 0.1,
-  "fps": 110.45484959913674,
+  "fps": 42.47428066873519,
   "hyperparameters": {
     "epochs": 600,
     "patience": 150,
@@ -31,17 +31,17 @@
     "cos_lr": true
   },
   "vs_baseline": {
-    "map50_delta": 0.015516485329633123,
-    "map50_95_delta": -0.009999328183840861,
-    "precision_delta": 0.1329950286042917,
-    "recall_delta": -0.06363878470206519,
+    "map50_delta": -0.0068931043812785475,
+    "map50_95_delta": -0.0016752960991555654,
+    "precision_delta": 0.04449420878569299,
+    "recall_delta": -0.052116220015788195,
     "per_class_delta": {
-      "crazing": 0.08349835811251916,
-      "inclusion": 0.03610631783041596,
-      "patches": -0.04313444042976744,
-      "pitted_surface": -0.005276033590707718,
-      "rolled-in_scale": 0.008808450677482815,
-      "scratches": 0.013096259377856856
+      "crazing": -0.07296634182390671,
+      "inclusion": 0.013496566672845711,
+      "patches": -0.0001608937175808789,
+      "pitted_surface": 0.0328183373676052,
+      "rolled-in_scale": -0.012897246160842202,
+      "scratches": -0.0016490486257928483
     }
   }
 }

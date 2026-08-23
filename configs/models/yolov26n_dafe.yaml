@@ -1,0 +1,58 @@
+# YOLOv26n + DAFE (Defect-Aware Feature Enhancement)
+# Novel contribution: DAFE module specifically designed for flat steel
+# surface defects. Dual-branch design:
+#   - Edge branch: Sobel-initialized conv for linear defects (scratches, crazing)
+#   - Texture branch: local variance for surface anomalies (pitting, scale)
+#
+# DAFE is inserted after C3k2 at P2 (layer 3) and P3 (layer 6) in the backbone.
+# This is the same placement strategy proven effective in digisteel.yaml (YOLOv11n).
+#
+# IMPORTANT: Register custom modules before loading this config:
+#   import ultralytics.nn.tasks as tasks
+#   from digisteel.modules import DAFE
+#   tasks.DAFE = DAFE
+# Or use: from digisteel.engine.trainer import register_custom_modules
+
+nc: 6
+scales:
+  n: [0.50, 0.25, 1024]
+
+end2end: true
+reg_max: 1
+
+# Backbone: YOLOv26n base + DAFE at P2 and P3
+# Layer indices shifted by +2 vs base YOLOv26n due to DAFE insertions
+backbone:
+  - [-1, 1, Conv, [64, 3, 2]]             # 0-P1/2   (400x400 @ imgsz=800)
+  - [-1, 1, Conv, [128, 3, 2]]            # 1-P2/4   (200x200)
+  - [-1, 2, C3k2, [256, False, 0.25]]     # 2
+  - [-1, 1, DAFE, [64, 8]]                 # 3  DAFE at P2: 64ch (128*0.5), reduction=8
+  - [-1, 1, Conv, [256, 3, 2]]            # 4-P3/8   (100x100)
+  - [-1, 2, C3k2, [512, False, 0.25]]     # 5
+  - [-1, 1, DAFE, [128, 8]]               # 6  DAFE at P3: 128ch (256*0.5), reduction=8
+  - [-1, 1, Conv, [512, 3, 2]]            # 7-P4/16  (50x50)
+  - [-1, 2, C3k2, [512, True]]            # 8
+  - [-1, 1, Conv, [1024, 3, 2]]           # 9-P5/32  (25x25)
+  - [-1, 2, C3k2, [1024, True]]           # 10
+  - [-1, 1, SPPF, [1024, 5, 3, True]]     # 11
+  - [-1, 2, C2PSA, [1024]]                # 12
+
+# Neck: PAN-FPN (same as YOLOv26n, indices shifted +2)
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 13
+  - [[-1, 8], 1, Concat, [1]]                     # 14  cat P4 (was 6, now 8)
+  - [-1, 2, C3k2, [512, True]]                    # 15
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 16
+  - [[-1, 6], 1, Concat, [1]]                     # 17  cat P3-after-DAFE (was 4, now 6)
+  - [-1, 2, C3k2, [256, True]]                    # 18
+
+  - [-1, 1, Conv, [256, 3, 2]]                    # 19  downsample
+  - [[-1, 15], 1, Concat, [1]]                    # 20  cat P4-up (was 13, now 15)
+  - [-1, 2, C3k2, [512, True]]                    # 21
+
+  - [-1, 1, Conv, [512, 3, 2]]                    # 22  downsample
+  - [[-1, 12], 1, Concat, [1]]                    # 23  cat P5-C2PSA (was 10, now 12)
+  - [-1, 1, C3k2, [1024, True, 0.5, True]]        # 24
+
+  - [[18, 21, 24], 1, Detect, [nc]]               # 25  Detect (was [16,19,22])

@@ -1,0 +1,104 @@
+{
+  "stage1": {
+    "stage": "feature_extraction",
+    "model": "yolo26n.pt",
+    "mAP50": 0.744147344270032,
+    "mAP50_95": 0.4227533686076217,
+    "precision": 0.6395235030988956,
+    "recall": 0.73216065582899,
+    "per_class_ap50": {
+      "crazing": 0.4290836380412311,
+      "inclusion": 0.8161121164788112,
+      "patches": 0.8603247012272811,
+      "pitted_surface": 0.7074206797151865,
+      "rolled-in_scale": 0.7083750672119238,
+      "scratches": 0.9435678629457589
+    }
+  },
+  "stage2": {
+    "stage": "fine_tuning",
+    "model": "yolo26n.pt",
+    "mAP50": 0.7562411920185091,
+    "mAP50_95": 0.44062954735974214,
+    "precision": 0.7169873718392509,
+    "recall": 0.7221408312810299,
+    "per_class_ap50": {
+      "crazing": 0.459240118218884,
+      "inclusion": 0.8316661694201947,
+      "patches": 0.8478705435257539,
+      "pitted_surface": 0.7013485008381328,
+      "rolled-in_scale": 0.7300646819373888,
+      "scratches": 0.9672571381707009
+    }
+  },
+  "stage2_vs_stage1": {
+    "mAP50_delta": 0.012093847748477105,
+    "mAP50_95_delta": 0.017876178752120442
+  },
+  "baseline_yolo11n": {
+    "experiment": "fresh_baseline",
+    "model": "yolo11n.pt",
+    "map50": 0.7876610795741521,
+    "map50_95": 0.451904228065856,
+    "precision": 0.7188901650856464,
+    "recall": 0.763378096047115,
+    "per_class_ap50": {
+      "crazing": 0.4028578996378866,
+      "inclusion": 0.8291152902458936,
+      "patches": 0.928351006599461,
+      "pitted_surface": 0.8218059284406225,
+      "rolled-in_scale": 0.7706266714625298,
+      "scratches": 0.9732096810585183
+    },
+    "training_time_hours": 2.57,
+    "copy_paste_used": 0.1,
+    "hyperparameters": {
+      "epochs": 600,
+      "patience": 150,
+      "batch": 16,
+      "imgsz": 800,
+      "optimizer": "AdamW",
+      "lr0": 0.001,
+      "mosaic": 0.0,
+      "mixup": 0.15,
+      "copy_paste": 0.1,
+      "cos_lr": true
+    }
+  },
+  "stage2_vs_baseline": {
+    "mAP50_delta": -0.031419887555642956
+  },
+  "baseline_yolo26n_full": {
+    "experiment": "yolov26n_neudet",
+    "model": "yolo26n.pt",
+    "map50": 0.8104652487058495,
+    "map50_95": 0.43140228178994966,
+    "precision": 0.7734442998020651,
+    "recall": 0.7621924975292301,
+    "per_class_ap50": {
+      "crazing": 0.5511100708786274,
+      "inclusion": 0.8473588282754565,
+      "patches": 0.8833528092314393,
+      "pitted_surface": 0.8130590308376633,
+      "rolled-in_scale": 0.7817835468847036,
+      "scratches": 0.9861272061272062
+    },
+    "training_time_hours": 3.19,
+    "copy_paste_used": 0.1,
+    "hyperparameters": {
+      "epochs": 600,
+      "patience": 150,
+      "batch": 16,
+      "imgsz": 800,
+      "optimizer": "AdamW",
+      "lr0": 0.001,
+      "mosaic": 0.0,
+      "mixup": 0.15,
+      "copy_paste": 0.1,
+      "cos_lr": true
+    }
+  },
+  "stage2_vs_yolo26n_full": {
+    "mAP50_delta": -0.054224056687340316
+  }
+}

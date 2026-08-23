@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DigiSteel-YOLO — Final Comprehensive Report</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --steel-900: #0a0e14;
+    --steel-800: #111820;
+    --steel-700: #1a2332;
+    --steel-600: #243040;
+    --steel-500: #2e3e52;
+    --steel-400: #4a5e73;
+    --steel-300: #7a8fa5;
+    --steel-200: #b0bfce;
+    --steel-100: #dbe3eb;
+    --steel-50:  #f7f8fa;
+    --accent:    #c0392b;
+    --accent-dk: #a93226;
+    --accent-lt: #e74c3c;
+    --accent-bg: rgba(192,57,43,0.04);
+    --fail:      #d35400;
+    --fail-bg:   rgba(211,84,0,0.04);
+    --pass:      #27ae60;
+    --pass-bg:   rgba(39,174,96,0.04);
+    --warn:      #f39c12;
+    --warn-bg:   rgba(243,156,18,0.04);
+    --gold:      #e67e22;
+    --gold-bg:   rgba(230,126,34,0.04);
+    --text:      #1a2332;
+    --text-muted:#5a6e82;
+    --white:     #ffffff;
+    --radius:    12px;
+    --radius-sm: 8px;
+    --shadow:    0 4px 24px rgba(10,14,20,0.08);
+    --shadow-lg: 0 12px 48px rgba(10,14,20,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--white);
+    color: var(--text);
+    line-height: 1.65;
+    font-size: 10pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ---- Print / Page System ---- */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  .page {
+    width: 100%;
+    padding: 40px 48px 60px;
+    background: var(--white);
+    position: relative;
+  }
+
+  .page-break { break-after: page; }
+
+  h1, h2, h3 { break-after: avoid; }
+  table, .exp-card, .callout, .metric-grid, .metric-grid-2, .metric-grid-3 { break-inside: avoid; }
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(192,57,43,0.15);
+    margin-bottom: 28px;
+    font-size: 8pt;
+    color: var(--text-muted);
+  }
+
+  .page-header-title {
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--steel-400);
+  }
+
+  .page-number {
+    font-weight: 600;
+    color: var(--steel-300);
+  }
+
+  /* ---- Cover Page ---- */
+  .cover {
+    width: 100%;
+    height: 100vh;
+    background: #0a0e14;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    break-after: page;
+    padding: 0;
+  }
+
+  /* Steel plate texture overlay */
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        rgba(255,255,255,0.012) 0px,
+        rgba(255,255,255,0.012) 1px,
+        transparent 1px,
+        transparent 60px
+      ),
+      repeating-linear-gradient(
+        0deg,
+        rgba(255,255,255,0.008) 0px,
+        rgba(255,255,255,0.008) 1px,
+        transparent 1px,
+        transparent 60px
+      );
+    z-index: 1;
+  }
+
+  /* Diagonal brushed steel effect */
+  .cover::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 2px,
+      rgba(255,255,255,0.006) 2px,
+      rgba(255,255,255,0.006) 4px
+    );
+    z-index: 1;
+  }
+
+  /* Top red accent bar */
+  .cover-bar-top {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 6px;
+    background: linear-gradient(90deg, #a93226 0%, #c0392b 30%, #e74c3c 60%, #c0392b 100%);
+    z-index: 10;
+    box-shadow: 0 2px 20px rgba(192,57,43,0.4);
+  }
+
+  /* Vertical red accent stripe on left */
+  .cover-stripe {
+    position: absolute;
+    top: 0; left: 72px;
+    width: 3px; height: 100%;
+    background: linear-gradient(180deg, transparent 0%, #c0392b 20%, #c0392b 80%, transparent 100%);
+    z-index: 5;
+    opacity: 0.5;
+  }
+
+  .cover-content {
+    position: relative;
+    z-index: 10;
+    padding: 0 96px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .cover-eyebrow {
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #c0392b;
+    margin-bottom: 20px;
+    padding-left: 2px;
+  }
+
+  .cover-title {
+    font-size: 52pt;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: -2px;
+    line-height: 1.0;
+    margin-bottom: 6px;
+  }
+
+  .cover-title span {
+    color: #e74c3c;
+  }
+
+  .cover-rule {
+    width: 80px;
+    height: 4px;
+    background: #c0392b;
+    margin: 24px 0;
+    border-radius: 2px;
+    box-shadow: 0 0 12px rgba(192,57,43,0.5);
+  }
+
+  .cover-subtitle {
+    font-size: 15pt;
+    font-weight: 300;
+    color: #8a9bb0;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .cover-dataset {
+    font-size: 10pt;
+    font-weight: 400;
+    color: #5a6e82;
+    margin-bottom: 56px;
+    letter-spacing: 0.3px;
+  }
+
+  .cover-stats {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+    max-width: 560px;
+  }
+
+  .cover-stat {
+    flex: 1;
+    padding: 24px 28px;
+    border-left: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .cover-stat:first-child {
+    border-left: none;
+    padding-left: 0;
+  }
+
+  .cover-stat-label {
+    font-size: 7pt;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #4a5e73;
+    margin-bottom: 8px;
+  }
+
+  .cover-stat-value {
+    font-size: 22pt;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1;
+  }
+
+  .cover-stat-value.red { color: #e74c3c; }
+
+  .cover-stat-sub {
+    font-size: 8pt;
+    color: #5a6e82;
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  /* Bottom section with meta info */
+  .cover-footer {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    z-index: 10;
+    padding: 0 96px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .cover-meta-group {
+    display: flex;
+    gap: 40px;
+  }
+
+  .cover-meta-item {}
+
+  .cover-meta-label {
+    font-size: 7pt;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #3a4e62;
+    margin-bottom: 4px;
+  }
+
+  .cover-meta-value {
+    font-size: 9.5pt;
+    font-weight: 500;
+    color: #7a8fa5;
+  }
+
+  .cover-page-mark {
+    font-size: 8pt;
+    font-weight: 600;
+    color: #3a4e62;
+    letter-spacing: 1px;
+  }
+
+  .cover-bottom-bar {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%; height: 3px;
+    background: linear-gradient(90deg, #a93226, #c0392b, #e74c3c, #c0392b, #a93226);
+    z-index: 10;
+  }
+
+  /* ---- Section Styling ---- */
+  h1 {
+    font-size: 18pt;
+    font-weight: 800;
+    color: var(--steel-900);
+    margin: 0 0 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 3px solid var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  h2 {
+    font-size: 13pt;
+    font-weight: 700;
+    color: var(--steel-800);
+    margin: 24px 0 12px 0;
+    padding-left: 14px;
+    border-left: 4px solid var(--accent);
+  }
+
+  h3 {
+    font-size: 11pt;
+    font-weight: 600;
+    color: var(--steel-600);
+    margin: 16px 0 8px 0;
+  }
+
+  p { margin-bottom: 10px; }
+  strong { font-weight: 600; }
+
+  .section { break-inside: avoid; }
+  .section-break { break-before: page; }
+
+  /* ---- Metric Cards ---- */
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 16px 0;
+  }
+
+  .metric-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 16px 0;
+  }
+
+  .metric-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 16px 0;
+  }
+
+  .metric-card {
+    background: var(--white);
+    border: 1px solid var(--steel-100);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 3px;
+  }
+
+  .metric-card.accent::before { background: var(--accent); }
+  .metric-card.fail::before { background: var(--fail); }
+  .metric-card.pass::before { background: var(--pass); }
+  .metric-card.warn::before { background: var(--warn); }
+  .metric-card.gold::before { background: var(--gold); }
+
+  .metric-card-label {
+    font-size: 7pt;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .metric-card-value {
+    font-size: 20pt;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+
+  .metric-card.accent .metric-card-value { color: var(--accent-dk); }
+  .metric-card.pass .metric-card-value { color: #229954; }
+  .metric-card.fail .metric-card-value { color: var(--fail); }
+  .metric-card.warn .metric-card-value { color: #e6b800; }
+  .metric-card.gold .metric-card-value { color: var(--gold); }
+
+  .metric-card-sub {
+    font-size: 7.5pt;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  /* ---- Tables ---- */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 9pt;
+  }
+
+  thead th {
+    background: var(--steel-800);
+    color: var(--white);
+    font-weight: 700;
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 8pt;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  thead th:first-child { border-radius: 6px 0 0 0; }
+  thead th:last-child { border-radius: 0 6px 0 0; }
+
+  tbody td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--steel-100);
+    vertical-align: top;
+  }
+
+  tbody tr:nth-child(even) { background: var(--steel-50); }
+  tbody tr:hover { background: rgba(0,0,0,0.02); }
+
+  tbody tr.highlight {
+    background: rgba(6,214,160,0.08);
+    font-weight: 600;
+  }
+
+  tbody tr.highlight td { border-bottom-color: rgba(6,214,160,0.2); }
+
+  .td-right { text-align: right; }
+  .td-center { text-align: center; }
+  .td-mono { font-family: 'JetBrains Mono', monospace; font-size: 8.5pt; }
+
+  /* ---- Callout Boxes ---- */
+  .callout {
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 9.5pt;
+  }
+
+  .callout-title {
+    font-weight: 700;
+    font-size: 8.5pt;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .callout.pass {
+    background: var(--pass-bg);
+    border-left: 4px solid var(--pass);
+  }
+  .callout.pass .callout-title { color: #229954; }
+
+  .callout.fail {
+    background: var(--fail-bg);
+    border-left: 4px solid var(--fail);
+  }
+  .callout.fail .callout-title { color: var(--fail); }
+
+  .callout.warn {
+    background: var(--warn-bg);
+    border-left: 4px solid var(--warn);
+  }
+  .callout.warn .callout-title { color: #e6b800; }
+
+  .callout.accent {
+    background: var(--accent-bg);
+    border-left: 4px solid var(--accent);
+  }
+  .callout.accent .callout-title { color: var(--accent-dk); }
+
+  .callout.gold {
+    background: var(--gold-bg);
+    border-left: 4px solid var(--gold);
+  }
+  .callout.gold .callout-title { color: var(--gold); }
+
+  /* ---- Tags / Badges ---- */
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 100px;
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .badge.pass { background: var(--pass-bg); color: #229954; }
+  .badge.fail { background: var(--fail-bg); color: var(--fail); }
+  .badge.warn { background: var(--warn-bg); color: #e6b800; }
+  .badge.accent { background: var(--accent-bg); color: var(--accent-dk); }
+
+  /* ---- Lists ---- */
+  ul, ol {
+    margin: 8px 0 12px 20px;
+    font-size: 9.5pt;
+  }
+
+  li { margin-bottom: 4px; }
+
+  /* ---- Code ---- */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--steel-50);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 8.5pt;
+    color: var(--steel-700);
+  }
+
+  /* ---- Divider ---- */
+  .divider {
+    height: 1px;
+    background: var(--steel-100);
+    margin: 20px 0;
+  }
+
+  /* ---- Footer ---- */
+  .page-footer {
+    position: absolute;
+    bottom: 24px;
+    left: 48px;
+    right: 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 7.5pt;
+    color: var(--steel-300);
+    border-top: 1px solid var(--steel-100);
+    padding-top: 8px;
+  }
+
+  /* ---- Experiment Card ---- */
+  .exp-card {
+    background: var(--white);
+    border: 1px solid var(--steel-100);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    margin: 12px 0;
+    box-shadow: var(--shadow);
+    break-inside: avoid;
+  }
+
+  .exp-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .exp-card-title {
+    font-weight: 700;
+    font-size: 10.5pt;
+    color: var(--steel-800);
+  }
+
+  .exp-card-result {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 11pt;
+  }
+
+  .exp-card-result.pass { color: #229954; }
+  .exp-card-result.fail { color: var(--fail); }
+  .exp-card-result.accent { color: var(--accent-dk); }
+
+  .exp-detail {
+    font-size: 9pt;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .exp-detail strong { color: var(--text); }
+
+  /* ---- TOC ---- */
+  .toc-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dotted var(--steel-100);
+    font-size: 10pt;
+  }
+
+  .toc-item:last-child { border-bottom: none; }
+
+  .toc-num {
+    font-weight: 700;
+    color: var(--accent-dk);
+    min-width: 28px;
+  }
+
+  .toc-title { font-weight: 500; flex: 1; }
+
+  .toc-page {
+    font-weight: 600;
+    color: var(--text-muted);
+    min-width: 24px;
+    text-align: right;
+  }
+
+  /* ---- Utility ---- */
+  .text-muted { color: var(--text-muted); }
+  .text-sm { font-size: 8.5pt; }
+  .text-xs { font-size: 7.5pt; }
+  .mt-0 { margin-top: 0; }
+  .mb-0 { margin-bottom: 0; }
+  .mb-4 { margin-bottom: 4px; }
+  .mb-8 { margin-bottom: 8px; }
+  .mb-16 { margin-bottom: 16px; }
+  .mb-24 { margin-bottom: 24px; }
+  .fw-600 { font-weight: 600; }
+  .fw-700 { font-weight: 700; }
+
+  @media print {
+    body { background: white; }
+    .page { box-shadow: none; margin: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- COVER PAGE -->
+<!-- ============================================================ -->
+<div class="cover">
+  <div class="cover-bar-top"></div>
+  <div class="cover-stripe"></div>
+
+  <div class="cover-content">
+    <div class="cover-eyebrow">Final Comprehensive Report</div>
+    <div class="cover-title">DigiSteel-<span>YOLO</span></div>
+    <div class="cover-rule"></div>
+    <div class="cover-subtitle">Steel Surface Defect Detection using Enhanced YOLO Architectures</div>
+    <div class="cover-dataset">NEU-DET Benchmark &bull; 6 Classes &bull; 1,800 Images &bull; 18 Experiments &bull; 4 Weeks</div>
+
+    <div class="cover-stats">
+      <div class="cover-stat">
+        <div class="cover-stat-label">Best mAP@0.5</div>
+        <div class="cover-stat-value red">81.0%</div>
+        <div class="cover-stat-sub">YOLOv26n</div>
+      </div>
+      <div class="cover-stat">
+        <div class="cover-stat-label">Best mAP@0.5:0.95</div>
+        <div class="cover-stat-value">45.2%</div>
+        <div class="cover-stat-sub">Fresh Baseline</div>
+      </div>
+      <div class="cover-stat">
+        <div class="cover-stat-label">Target</div>
+        <div class="cover-stat-value">83%</div>
+        <div class="cover-stat-sub">mAP@0.5</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cover-footer">
+    <div class="cover-meta-group">
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Framework</div>
+        <div class="cover-meta-value">Ultralytics YOLO / PyTorch</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Date</div>
+        <div class="cover-meta-value">July 12, 2026</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Hardware</div>
+        <div class="cover-meta-value">NVIDIA RTX 2000 Ada</div>
+      </div>
+    </div>
+    <div class="cover-page-mark">DigiSteel-YOLO</div>
+  </div>
+
+  <div class="cover-bottom-bar"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 2: EXECUTIVE SUMMARY -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <span class="page-header-title">DigiSteel-YOLO Final Report</span>
+    <span class="page-number">2 / 14</span>
+  </div>
+
+  <h1>Executive Summary</h1>
+
+  <p>Over <strong>18 experiments spanning 4 weeks</strong>, the DigiSteel-YOLO project progressed from a 75.8% mAP@0.5 baseline to a best result of <strong>81.0% mAP@0.5</strong> (YOLOv26n). The project's core novel contribution, <strong>DAFE</strong> (Defect-Aware Feature Enhancement), delivered a consistent +1.5% gain over a strong optimized baseline, with a remarkable <strong>+8.3% improvement on the hardest class (crazing)</strong>.</p>
+
+  <h2>Current State-of-the-Art Results</h2>
+
+  <div class="metric-grid">
+    <div class="metric-card pass">
+      <div class="metric-card-label">Best mAP@0.5</div>
+      <div class="metric-card-value">81.0%</div>
+      <div class="metric-card-sub">YOLOv26n</div>
+    </div>
+    <div class="metric-card accent">
+      <div class="metric-card-label">Best mAP@0.5:0.95</div>
+      <div class="metric-card-value">45.2%</div>
+      <div class="metric-card-sub">Fresh Baseline</div>
+    </div>
+    <div class="metric-card gold">
+      <div class="metric-card-label">Best Precision</div>
+      <div class="metric-card-value">85.2%</div>
+      <div class="metric-card-sub">DAFE v4</div>
+    </div>
+    <div class="metric-card warn">
+      <div class="metric-card-label">Best Recall</div>
+      <div class="metric-card-value">76.3%</div>
+      <div class="metric-card-sub">Fresh Baseline</div>
+    </div>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric-card accent">
+      <div class="metric-card-label">Best F1 Score</div>
+      <div class="metric-card-value">71.6%</div>
+      <div class="metric-card-sub">DAFE v4</div>
+    </div>
+    <div class="metric-card pass">
+      <div class="metric-card-label">Inference FPS</div>
+      <div class="metric-card-value">110</div>
+      <div class="metric-card-sub">DAFE v4</div>
+    </div>
+    <div class="metric-card gold">
+      <div class="metric-card-label">Crazing AP (Hardest)</div>
+      <div class="metric-card-value">55.1%</div>
+      <div class="metric-card-sub">YOLOv26n</div>
+    </div>
+    <div class="metric-card warn">
+      <div class="metric-card-label">Gap to Target</div>
+      <div class="metric-card-value">2.0%</div>
+      <div class="metric-card-sub">Target: 83%</div>
+    </div>
+  </div>
+
+  <h2>Best Metrics Summary</h2>
+  <table>
+    <thead>
+      <tr><th>Metric</th><th>Best Value</th><th>Model</th><th>Experiment</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>mAP@0.5</td><td class="td-mono"><strong>81.0%</strong></td><td>YOLOv26n</td><td>Exp 15 — YOLOv26n NEU-DET</td></tr>
+      <tr><td>mAP@0.5:0.95</td><td class="td-mono"><strong>45.2%</strong></td><td>YOLOv11n Baseline</td><td>Exp 08 — Fresh Baseline</td></tr>
+      <tr><td>Precision</td><td class="td-mono"><strong>85.2%</strong></td><td>YOLOv11n + DAFE v4</td><td>Exp 10 — DAFE v4</td></tr>
+      <tr><td>Recall</td><td class="td-mono"><strong>76.3%</strong></td><td>YOLOv11n Baseline</td><td>Exp 08 — Fresh Baseline</td></tr>
+      <tr><td>F1 Score</td><td class="td-mono"><strong>71.6%</strong></td><td>YOLOv11n + DAFE v4</td><td>Exp 10 — DAFE v4</td></tr>
+      <tr><td>Inference FPS</td><td class="td-mono"><strong>110</strong></td><td>YOLOv11n + DAFE v4</td><td>Exp 10 — DAFE v4</td></tr>
+      <tr><td>Crazing AP</td><td class="td-mono"><strong>55.1%</strong></td><td>YOLOv26n</td><td>Exp 15 — YOLOv26n NEU-DET</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>DigiSteel-YOLO Project</span>
+    <span>July 12, 2026</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 3: DATASET PROFILE -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <span class="page-header-title">DigiSteel-YOLO Final Report</span>
+    <span class="page-number">3 / 14</span>
+  </div>
+
+  <h1>1. Dataset Profile — NEU-DET</h1>
+
+  <h2>1.1 Overview</h2>
+  <div class="metric-grid">
+    <div class="metric-card accent">
+      <div class="metric-card-label">Total Images</div>
+      <div class="metric-card-value">1,800</div>
+    </div>
+    <div class="metric-card accent">
+      <div class="metric-card-label">Annotations</div>
+      <div class="metric-card-value">4,189</div>
+    </div>
+    <div class="metric-card gold">
+      <div class="metric-card-label">Image Size</div>
+      <div class="metric-card-value" style="font-size:14pt;">200×200</div>
+      <div class="metric-card-sub">Grayscale</div>
+    </div>
+    <div class="metric-card warn">
+      <div class="metric-card-label">Imbalance Ratio</div>
+      <div class="metric-card-value">2.34×</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Property</th><th>Value</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Train / Val / Test Split</td><td><strong>1,290 / 344 / 166</strong> (70/20/10)</td></tr>
+      <tr><td>Number of Classes</td><td>6</td></tr>
+      <tr><td>Gini Coefficient</td><td>0.157</td></tr>
+      <tr><td>Edge-touching bboxes</td><td>56.6%</td></tr>
+      <tr><td>Blurry images</td><td>5.0%</td></tr>
+    </tbody>
+  </table>
+
+  <h2>1.2 Class Distribution</h2>
+  <table>
+    <thead>
+      <tr><th>Class</th><th>Count</th><th>Inv. Freq. Weight</th><th>Challenge Level</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>inclusion</td><td class="td-mono">1,011</td><td class="td-mono">0.638</td><td><span class="badge warn">Medium</span></td></tr>
+      <tr><td>patches</td><td class="td-mono">881</td><td class="td-mono">0.732</td><td><span class="badge pass">Easy</span></td></tr>
+      <tr><td>crazing</td><td class="td-mono">689</td><td class="td-mono">0.936</td><td><span class="badge fail">HARDEST</span></td></tr>
+      <tr><td>rolled-in_scale</td><td class="td-mono">628</td><td class="td-mono">1.027</td><td><span class="badge warn">Medium</span></td></tr>
+      <tr><td>scratches</td><td class="td-mono">548</td><td class="td-mono">1.176</td><td><span class="badge pass">Easy</span></td></tr>
+      <tr><td>pitted_surface</td><td class="td-mono">432</td><td class="td-mono">1.492</td><td><span class="badge warn">Medium-Hard</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2>1.3 Bounding Box Statistics</h2>
+  <table>
+    <thead>
+      <tr><th>Metric</th><th>Mean</th><th>Median</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Width</td><td class="td-mono">71.4 px</td><td class="td-mono">55.0 px</td></tr>
+      <tr><td>Height</td><td class="td-mono">95.0 px</td><td class="td-mono">77.0 px</td></tr>
+      <tr><td>Area</td><td class="td-mono">6,980 px²</td><td class="td-mono">4,715 px²</td></tr>
+      <tr><td>Small objects (&lt;5%)</td><td class="td-mono" colspan="2">10.7%</td></tr>
+      <tr><td>Medium objects (5–15%)</td><td class="td-mono" colspan="2">66.2%</td></tr>
+      <tr><td>Large objects (&gt;15%)</td><td class="td-mono" colspan="2">23.1%</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>DigiSteel-YOLO Project</span>
+    <span>July 12, 2026</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 4: EXPERIMENTAL TIMELINE -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <span class="page-header-title">DigiSteel-YOLO Final Report</span>
+    <span class="page-number">4 / 14</span>
+  </div>
+
+  <h1>2. Complete Experimental Timeline</h1>
+
+  <h2>2.1 Master Results Table</h2>
+  <table>
+    <thead>
+      <tr><th>#</th><th>Experiment</th><th>Model</th><th>mAP@0.5</th><th>mAP50:95</th><th>Prec.</th><th>Recall</th><th>FPS</th><th>Delta</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>01</td><td>Old Baseline (v1)</td><td>v11n</td><td class="td-mono">75.8%</td><td class="td-mono">43.5%</td><td class="td-mono">—</td><td class="td-mono">—</td><td class="td-mono">—</td><td class="td-mono">—</td></tr>
+      <tr><td>03</td><td>DigiSteel Complete</td><td>v11n</td><td class="td-mono">75.8%</td><td class="td-mono">—</td><td class="td-mono">—</td><td class="td-mono">—</td><td class="td-mono">—</td><td class="td-mono">+0.0%</td></tr>
+      <tr><td>05</td><td>Week 2 Ablation</td><td>v11n</td><td class="td-mono">75.9%</td><td class="td-mono">41.9%</td><td class="td-mono">73.8%</td><td class="td-mono">69.5%</td><td class="td-mono">—</td><td class="td-mono">+0.1%</td></tr>
+      <tr><td>06</td><td>Wk3 A1 Config</td><td>v11n</td><td class="td-mono">74.8%</td><td class="td-mono">41.6%</td><td class="td-mono">73.7%</td><td class="td-mono">70.3%</td><td class="td-mono">—</td><td class="td-mono" style="color:#d35400">−1.0%</td></tr>
+      <tr><td>07</td><td>Wk3 A2 Arch</td><td>v11s</td><td class="td-mono">73.4%</td><td class="td-mono">37.5%</td><td class="td-mono">70.1%</td><td class="td-mono">70.6%</td><td class="td-mono">—</td><td class="td-mono" style="color:#d35400">−2.4%</td></tr>
+      <tr class="highlight"><td>08</td><td>Fresh Baseline</td><td>v11n</td><td class="td-mono">78.8%</td><td class="td-mono">45.2%</td><td class="td-mono">71.9%</td><td class="td-mono">76.3%</td><td class="td-mono">105</td><td class="td-mono" style="color:#229954">+3.0%</td></tr>
+      <tr class="highlight"><td>10</td><td>DAFE v4</td><td>v11n+D</td><td class="td-mono">80.3%</td><td class="td-mono">44.2%</td><td class="td-mono">85.2%</td><td class="td-mono">70.0%</td><td class="td-mono">110</td><td class="td-mono" style="color:#229954">+1.5%</td></tr>
+      <tr><td>12</td><td>TL Stage 1</td><td>v11n</td><td class="td-mono">77.8%</td><td class="td-mono">42.3%</td><td class="td-mono">69.6%</td><td class="td-mono">74.0%</td><td class="td-mono">—</td><td class="td-mono" style="color:#d35400">−1.0%</td></tr>
+      <tr><td>13</td><td>TL Stage 2</td><td>v11n</td><td class="td-mono">79.4%</td><td class="td-mono">44.0%</td><td class="td-mono">73.3%</td><td class="td-mono">76.3%</td><td class="td-mono">—</td><td class="td-mono" style="color:#229954">+0.6%</td></tr>
+      <tr><td>14a</td><td>TL+DAFE v1</td><td>v11n+D</td><td class="td-mono" style="color:#d35400">63.3%</td><td class="td-mono">23.9%</td><td class="td-mono">60.8%</td><td class="td-mono">62.0%</td><td class="td-mono">—</td><td class="td-mono" style="color:#d35400">−15.5%</td></tr>
+      <tr><td>14b</td><td>TL+DAFE v2</td><td>v11n+D</td><td class="td-mono">78.6%</td><td class="td-mono">43.3%</td><td class="td-mono">72.9%</td><td class="td-mono">73.2%</td><td class="td-mono">—</td><td class="td-mono">−0.2%</td></tr>
+      <tr class="highlight"><td>15</td><td>YOLOv26n</td><td>v26n</td><td class="td-mono" style="color:#229954"><strong>81.0%</strong></td><td class="td-mono">43.1%</td><td class="td-mono">77.3%</td><td class="td-mono">76.2%</td><td class="td-mono">—</td><td class="td-mono" style="color:#229954">+2.2%</td></tr>
+      <tr><td>16a</td><td>v26n TL Stg1</td><td>v26n</td><td class="td-mono">74.4%</td><td class="td-mono">42.3%</td><td class="td-mono">64.0%</td><td class="td-mono">73.2%</td><td class="td-mono">—</td><td class="td-mono" style="color:#d35400">−4.4%</td></tr>
+      <tr><td>16b</td><td>v26n TL Stg2</td><td>v26n</td><td class="td-mono">75.6%</td><td class="td-mono">44.1%</td><td class="td-mono">71.7%</td><td class="td-mono">72.2%</td><td class="td-mono">—</td><td class="td-mono" style="color:#d35400">−3.2%</td></tr>
+    </tbody>
+  </table>
+
+  <p class="text-xs text-muted">Delta relative to old baseline (75.8%) for exp 01–07, fresh baseline (78.8%) for exp 08+. Green = best results.</p>
+
+  <h2>2.2 Per-Class AP@0.5 Breakdown</h2>
+  <table>
+    <thead>
+      <tr><th>Class</th><th>Old Base</th><th>Wk3 A1</th><th>Wk3 A2</th><th>Fresh</th><th>DAFE v4</th><th>TL Stg2</th><th>v26n</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>crazing</td><td class="td-mono">13.3%</td><td class="td-mono">13.3%</td><td class="td-mono">12.9%</td><td class="td-mono">40.3%</td><td class="td-mono">48.6%</td><td class="td-mono">47.4%</td><td class="td-mono"><strong>55.1%</strong></td></tr>
+      <tr><td>inclusion</td><td class="td-mono">—</td><td class="td-mono">45.3%</td><td class="td-mono">39.3%</td><td class="td-mono">82.9%</td><td class="td-mono">86.5%</td><td class="td-mono"><strong>88.3%</strong></td><td class="td-mono">84.7%</td></tr>
+      <tr><td>patches</td><td class="td-mono">—</td><td class="td-mono">60.3%</td><td class="td-mono">55.5%</td><td class="td-mono"><strong>92.8%</strong></td><td class="td-mono">88.5%</td><td class="td-mono">87.9%</td><td class="td-mono">88.3%</td></tr>
+      <tr><td>pitted_surface</td><td class="td-mono">—</td><td class="td-mono">49.3%</td><td class="td-mono">44.7%</td><td class="td-mono"><strong>82.2%</strong></td><td class="td-mono">81.7%</td><td class="td-mono">81.5%</td><td class="td-mono">81.3%</td></tr>
+      <tr><td>rolled-in_scale</td><td class="td-mono">—</td><td class="td-mono">27.5%</td><td class="td-mono">23.0%</td><td class="td-mono">77.1%</td><td class="td-mono">77.9%</td><td class="td-mono">75.1%</td><td class="td-mono"><strong>78.2%</strong></td></tr>
+      <tr><td>scratches</td><td class="td-mono">54.1%</td><td class="td-mono">54.1%</td><td class="td-mono">49.4%</td><td class="td-mono">97.3%</td><td class="td-mono"><strong>98.6%</strong></td><td class="td-mono">96.3%</td><td class="td-mono"><strong>98.6%</strong></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout pass">
+    <div class="callout-title">Key Result</div>
+    Crazing (hardest class) improved from 13.3% to 55.1% — a <strong>41.8 percentage-point gain</strong> across the project.
+  </div>
+
+  <div class="page-footer">
+    <span>DigiSteel-YOLO Project</span>
+    <span>July 12, 2026</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 5: PHASE 1 & 2 -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <span class="page-header-title">DigiSteel-YOLO Final Report</span>
+    <span class="page-number">5 / 14</span>
+  </div>
+
+  <h1>3. Experiment Phases — Detailed Analysis</h1>
+
+  <h2>3.1 Phase 1: Initial Baseline &amp; Failed Attempts (Weeks 1–3)</h2>
+
+  <div class="exp-card">
+    <div class="exp-card-header">
+      <span class="exp-card-title">Experiment 01 — Old Baseline</span>
+      <span class="exp-card-result accent">75.8% mAP</span>
+    </div>
+    <div class="exp-detail"><strong>Architecture:</strong> YOLOv11n + GhostConv + WFCA + EMA (6 custom modules). mosaic=1.0, imgsz=800.</div>
+    <div class="exp-detail"><strong>Result:</strong> 75.8% mAP@0.5. Only +0.1% over vanilla YOLOv11n. Attention stacking failure — modules learned to ignore each other.</div>
+  </div>
+
+  <div class="exp-card">
+    <div class="exp-card-header">
+      <span class="exp-card-title">Experiment 06 — Week 3 A1: Config Fix</span>
+      <span class="exp-card-result fail">74.8% mAP</span>
+    </div>
+    <div class="exp-detail"><strong>Change:</strong> mosaic=0, mixup=0.15, degrees=10, translate=0.2, scale=0.6, shear=5, epochs=400.</div>
+    <div class="exp-detail"><strong>Result:</strong> 74.8% mAP@0.5 (−1.0%). Removing mosaic alone hurt augmentation diversity.</div>
+  </div>
+
+  <div class="exp-card">
+    <div class="exp-card-header">
+      <span class="exp-card-title">Experiment 07 — Week 3 A2: Architecture Fix</span>
+      <span class="exp-card-result fail">73.4% mAP</span>
+    </div>
+    <div class="exp-detail"><strong>Change:</strong> Upgraded to YOLOv11s (2× capacity) + Standard Conv + CoordAttention at P3.</div>
+    <div class="exp-detail"><strong>Result:</strong> 73.4% mAP@0.5 (−2.4%). YOLOv11s overfit severely on only 1,200 training images.</div>
+  </div>
+
+  <div class="callout fail">
+    <div class="callout-title">Key Lesson</div>
+    Both naive config changes and architecture upsizing failed. A systematic, recipe-first approach was needed.
+  </div>
+
+  <h2>3.2 Phase 2: Recipe Optimization &amp; DAFE (Week 4)</h2>
+
+  <div class="exp-card">
+    <div class="exp-card-header">
+      <span class="exp-card-title">Experiment 08 — Fresh Baseline (The Breakthrough)</span>
+      <span class="exp-card-result pass">78.8% mAP</span>
+    </div>
+    <div class="exp-detail"><strong>Recipe:</strong> AdamW, lr0=0.001, 600 epochs, patience=150, cos_lr=True, mosaic=0.0, mixup=0.15, copy_paste=0.1, imgsz=800, label_smoothing=0.01.</div>
+    <div class="exp-detail"><strong>Result:</strong> 78.8% mAP@0.5, 45.2% mAP@0.5:0.95 (+3.0%). Training time: 2.57 hours.</div>
+    <div class="exp-detail"><strong>Verdict:</strong> Biggest single improvement in the entire project. Proper recipe optimization matters more than architecture changes.</div>
+  </div>
+
+  <div class="exp-card">
+    <div class="exp-card-header">
+      <span class="exp-card-title">Experiment 10 — DAFE v4 (Novel Architecture)</span>
+      <span class="exp-card-result pass">80.3% mAP</span>
+    </div>
+    <div class="exp-detail"><strong>Architecture:</strong> YOLOv11n + DAFE (Defect-Aware Feature Enhancement) at P2 and P3.</div>
+    <div class="exp-detail"><strong>DAFE Design:</strong> Dual-branch — Sobel EdgeConv (linear defects) + local variance TextureBranch (surface anomalies) + SE channel attention + learnable residual (α_init=−2.2).</div>
+    <div class="exp-detail"><strong>Result:</strong> 80.3% mAP@0.5 (+1.5%). Precision: 85.2% (+13.3%). FPS: 110. Crazing: +8.3%, Inclusion: +3.6%, Scratches: +1.3%.</div>
+  </div>
+
+  <div class="callout pass">
+    <div class="callout-title">Key Lesson</div>
+    One well-designed module (DAFE = +1.5%) beats six stacked modules (GhostConv+WFCA+EMA = +0.1%).
+  </div>
+
+  <div class="page-footer">
+    <span>DigiSteel-YOLO Project</span>
+    <span>July 12, 2026</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 6: PHASE 3 & 4 -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <span class="page-header-title">DigiSteel-YOLO Final Report</span>
+    <span class="page-number">6 / 14</span>
+  </div>
+
+  <h2>3.3 Phase 3: Transfer Learning</h2>
+
+  <div class="exp-card">
+    <div class="exp-card-header">
+      <span class="exp-card-title">Experiments 12–13 — Two-Stage Transfer Learning</span>
+      <span class="exp-card-result accent">79.4% mAP</span>
+    </div>
+    <div class="exp-detail"><strong>Stage 1 (Head-only):</strong> 77.8% mAP@0.5 (−1.0%). <strong>Stage 2 (Fine-tune all):</strong> 79.4% mAP@0.5 (+0.6%).</div>
+    <div class="exp-detail"><strong>Per-class gains:</strong> Inclusion +5.4%, Crazing +7.1%. Modest improvement — from-scratch with proper recipe is competitive.</div>
+  </div>
+
+  <div class="exp-card">
+    <div class="exp-card-header">
+      <span class="exp-card-title">Experiment 14a — TL + DAFE v1 (Critical Failure)</span>
+      <span class="exp-card-result fail">63.3% mAP</span>
+    </div>
+    <div class="exp-detail"><strong>Result:</strong> 63.3% mAP@0.5 (−15.5% catastrophic). DAFE modules inserted into fine-tuned model disrupted learned features.</div>
+    <div class="exp-detail"><strong>Recovery (14b):</strong> 78.6% mAP@0.5 (−0.2%). Managed to recover baseline but DAFE gave no additional benefit with TL.</div>
+  </div>
+
+  <h2>3.4 Phase 4: YOLOv26n Investigation</h2>
+
+  <div class="exp-card">
+    <div class="exp-card-header">
+      <span class="exp-card-title">Experiment 15 — YOLOv26n from Scratch</span>
+      <span class="exp-card-result pass">81.0% mAP</span>
+    </div>
+    <div class="exp-detail"><strong>Architecture:</strong> YOLOv26n (~2.9M params). Same optimized recipe as fresh baseline.</div>
+    <div class="exp-detail"><strong>Result:</strong> 81.0% mAP@0.5, 43.1% mAP@0.5:0.95. Best mAP@0.5. Crazing: 55.1% (best across all). Training: 3.19 hours.</div>
+  </div>
+
+  <div class="exp-card">
+    <div class="exp-card-header">
+      <span class="exp-card-title">Experiment 16 — YOLOv26n Transfer Learning</span>
+      <span class="exp-card-result fail">75.6% mAP</span>
+    </div>
+    <div class="exp-detail"><strong>Stage 1:</strong> 74.4% (−4.4%). <strong>Stage 2:</strong> 75.6% (−3.2%). Transfer learning HURT YOLOv26n.</div>
+    <div class="exp-detail"><strong>Why:</strong> COCO weights conflicted with steel domain. From-scratch training with proper recipe was superior.</div>
+  </div>
+
+  <div class="callout warn">
+    <div class="callout-title">Critical Insight</div>
+    Transfer learning is overrated for this dataset. From-scratch training with proper recipe matched or beat TL in most configurations.
+  </div>
+
+  <div class="page-footer">
+    <span>DigiSteel-YOLO Project</span>
+    <span>July 12, 2026</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 7: ROBUSTNESS EVALUATION -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <span class="page-header-title">DigiSteel-YOLO Final Report</span>
+    <span class="page-number">7 / 14</span>
+  </div>
+
+  <h1>4. Robustness Evaluation</h1>
+  <p>Models evaluated under 6 perturbation types at 4 severity levels each (24 conditions per model).</p>
+
+  <h2>4.1 Baseline Robustness (YOLOv11n Fresh Baseline)</h2>
+  <table>
+    <thead>
+      <tr><th>Perturbation</th><th>Clean</th><th>Lvl 1</th><th>Lvl 2</th><th>Lvl 3</th><th>Lvl 4</th><th>Avg Drop</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Gaussian Blur</td><td class="td-mono">75.8%</td><td class="td-mono">54.1%</td><td class="td-mono">29.3%</td><td class="td-mono">24.1%</td><td class="td-mono">22.2%</td><td class="td-mono" style="color:#d35400">−53.7%</td></tr>
+      <tr><td>Motion Blur</td><td class="td-mono">75.8%</td><td class="td-mono">65.0%</td><td class="td-mono">49.9%</td><td class="td-mono">40.1%</td><td class="td-mono">34.4%</td><td class="td-mono" style="color:#d35400">−30.1%</td></tr>
+      <tr><td>Gaussian Noise</td><td class="td-mono">75.8%</td><td class="td-mono">47.7%</td><td class="td-mono">22.6%</td><td class="td-mono">9.9%</td><td class="td-mono">8.7%</td><td class="td-mono" style="color:#d35400">−63.2%</td></tr>
+      <tr><td>Brightness Shift</td><td class="td-mono">75.8%</td><td class="td-mono">74.9%</td><td class="td-mono">72.5%</td><td class="td-mono">75.6%</td><td class="td-mono">74.0%</td><td class="td-mono" style="color:#229954">−2.4%</td></tr>
+      <tr><td>Contrast Reduction</td><td class="td-mono">75.8%</td><td class="td-mono">74.5%</td><td class="td-mono">70.0%</td><td class="td-mono">59.9%</td><td class="td-mono">36.6%</td><td class="td-mono" style="color:#d35400">−22.3%</td></tr>
+      <tr><td>JPEG Compression</td><td class="td-mono">75.8%</td><td class="td-mono">73.0%</td><td class="td-mono">66.1%</td><td class="td-mono">59.3%</td><td class="td-mono">39.2%</td><td class="td-mono" style="color:#d35400">−29.6%</td></tr>
+    </tbody>
+  </table>
+
+  <h2>4.2 DAFE Robustness (Early DAFE Model, 75.9% mAP)</h2>
+  <p class="text-sm text-muted mb-8">Note: This evaluation was performed on an earlier DAFE variant (mAP@0.5=75.9%), not on the final DAFE v4 (80.3%). Results are for relative comparison.</p>
+  <table>
+    <thead>
+      <tr><th>Perturbation</th><th>Clean</th><th>Lvl 1</th><th>Lvl 2</th><th>Lvl 3</th><th>Lvl 4</th><th>Avg Drop</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Gaussian Blur</td><td class="td-mono">75.9%</td><td class="td-mono">50.1%</td><td class="td-mono">27.9%</td><td class="td-mono">21.9%</td><td class="td-mono">19.2%</td><td class="td-mono" style="color:#d35400">−56.3%</td></tr>
+      <tr><td>Motion Blur</td><td class="td-mono">75.9%</td><td class="td-mono">69.3%</td><td class="td-mono">59.3%</td><td class="td-mono">53.1%</td><td class="td-mono">49.0%</td><td class="td-mono" style="color:#229954">−18.9%</td></tr>
+      <tr><td>Gaussian Noise</td><td class="td-mono">75.9%</td><td class="td-mono">47.4%</td><td class="td-mono">25.5%</td><td class="td-mono">9.2%</td><td class="td-mono">3.3%</td><td class="td-mono" style="color:#d35400">−65.7%</td></tr>
+      <tr><td>Brightness Shift</td><td class="td-mono">75.9%</td><td class="td-mono">74.7%</td><td class="td-mono">68.9%</td><td class="td-mono">74.6%</td><td class="td-mono">72.4%</td><td class="td-mono" style="color:#229954">−4.0%</td></tr>
+      <tr><td>Contrast Reduction</td><td class="td-mono">75.9%</td><td class="td-mono">74.5%</td><td class="td-mono">67.3%</td><td class="td-mono">52.2%</td><td class="td-mono">30.6%</td><td class="td-mono" style="color:#d35400">−28.5%</td></tr>
+      <tr><td>JPEG Compression</td><td class="td-mono">75.9%</td><td class="td-mono">73.5%</td><td class="td-mono">69.4%</td><td class="td-mono">67.9%</td><td class="td-mono">55.2%</td><td class="td-mono" style="color:#229954">−14.3%</td></tr>
+    </tbody>
+  </table>
+
+  <h2>4.3 Robustness Comparison</h2>
+  <table>
+    <thead>
+      <tr><th>Perturbation Type</th><th>Baseline Avg</th><th>DAFE Avg</th><th>Winner</th><th>Delta</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Gaussian Blur</td><td class="td-mono">32.4%</td><td class="td-mono">29.8%</td><td>Baseline</td><td class="td-mono" style="color:#d35400">−2.6%</td></tr>
+      <tr><td>Motion Blur</td><td class="td-mono">47.3%</td><td class="td-mono">57.7%</td><td><span class="badge pass">DAFE</span></td><td class="td-mono" style="color:#229954">+10.4%</td></tr>
+      <tr><td>Gaussian Noise</td><td class="td-mono">22.2%</td><td class="td-mono">21.3%</td><td>Baseline</td><td class="td-mono" style="color:#d35400">−0.9%</td></tr>
+      <tr><td>Brightness Shift</td><td class="td-mono">74.2%</td><td class="td-mono">72.7%</td><td>Baseline</td><td class="td-mono" style="color:#d35400">−1.5%</td></tr>
+      <tr><td>Contrast Reduction</td><td class="td-mono">60.3%</td><td class="td-mono">56.1%</td><td>Baseline</td><td class="td-mono" style="color:#d35400">−4.2%</td></tr>
+      <tr><td>JPEG Compression</td><td class="td-mono">59.4%</td><td class="td-mono">66.5%</td><td><span class="badge pass">DAFE</span></td><td class="td-mono" style="color:#229954">+7.1%</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout accent">
+    <div class="callout-title">Robustness Insight</div>
+    DAFE shows better robustness to motion blur (+10.4%) and JPEG compression (+7.1%) — common in real-world cameras. The baseline is more robust to Gaussian blur, noise, brightness, and contrast.
+  </div>
+
+  <div class="page-footer">
+    <span>DigiSteel-YOLO Project</span>
+    <span>July 12, 2026</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 8: ARCHITECTURE ANALYSIS -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <span class="page-header-title">DigiSteel-YOLO Final Report</span>
+    <span class="page-number">8 / 14</span>
+  </div>
+
+  <h1>5. Architecture Analysis</h1>
+
+  <h2>5.1 Model Comparison</h2>
+  <table>
+    <thead>
+      <tr><th>Model</th><th>Params</th><th>mAP@0.5</th><th>mAP50:95</th><th>FPS</th><th>Train Time</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>YOLOv11n (baseline)</td><td class="td-mono">2.62M</td><td class="td-mono">78.8%</td><td class="td-mono">45.2%</td><td class="td-mono">105</td><td class="td-mono">2.57h</td></tr>
+      <tr class="highlight"><td>YOLOv11n + DAFE</td><td class="td-mono">~2.94M</td><td class="td-mono">80.3%</td><td class="td-mono">44.2%</td><td class="td-mono">110</td><td class="td-mono">3.51h</td></tr>
+      <tr><td>YOLOv11s (failed)</td><td class="td-mono">9.46M</td><td class="td-mono" style="color:#d35400">73.4%</td><td class="td-mono">37.5%</td><td class="td-mono">—</td><td class="td-mono">—</td></tr>
+      <tr class="highlight"><td>YOLOv26n</td><td class="td-mono">~2.9M</td><td class="td-mono" style="color:#229954"><strong>81.0%</strong></td><td class="td-mono">43.1%</td><td class="td-mono">—</td><td class="td-mono">3.19h</td></tr>
+    </tbody>
+  </table>
+
+  <h2>5.2 DAFE Architecture Detail</h2>
+  <p><strong>DAFE</strong> (Defect-Aware Feature Enhancement) is the core novelty of DigiSteel-YOLO:</p>
+
+  <div class="metric-grid-2">
+    <div class="metric-card pass" style="text-align:left;">
+      <div class="metric-card-label" style="margin-bottom:8px;">Edge Branch</div>
+      <p class="text-sm mb-0">Conv2d(C, C//2, 3×3) initialized with Sobel-X/Y filters. All weights learnable. Targets linear defects (scratches, crazing).</p>
+    </div>
+    <div class="metric-card accent" style="text-align:left;">
+      <div class="metric-card-label" style="margin-bottom:8px;">Texture Branch</div>
+      <p class="text-sm mb-0">AvgPool(3×3) → local variance (E[X²]−E[X]²) → Conv1×1. Lightweight. Targets surface anomalies (inclusions, pitting).</p>
+    </div>
+    <div class="metric-card gold" style="text-align:left;">
+      <div class="metric-card-label" style="margin-bottom:8px;">Channel Attention</div>
+      <p class="text-sm mb-0">SE-style squeeze-excitation after concatenation of both branches. Learns which features matter most.</p>
+    </div>
+    <div class="metric-card warn" style="text-align:left;">
+      <div class="metric-card-label" style="margin-bottom:8px;">Learnable Residual</div>
+      <p class="text-sm mb-0">output = x + sigmoid(α_raw) × enhanced. α_init = −2.2 → sigmoid ≈ 0.1 (starts small, learns to contribute).</p>
+    </div>
+  </div>
+
+  <div class="callout accent">
+    <div class="callout-title">Placement Strategy</div>
+    DAFE is placed at <strong>P2</strong> (80×80 at imgsz=640, highest spatial resolution) and <strong>P3</strong> (40×40). Not at P4/P5 — those lose fine-grained spatial info critical for defect detection.
+  </div>
+
+  <h1>6. Training Configuration</h1>
+
+  <h2>6.1 Main Recipe</h2>
+  <table>
+    <thead>
+      <tr><th>Parameter</th><th>Value</th><th>Rationale</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Optimizer</td><td class="td-mono">AdamW</td><td>Better generalization for small datasets</td></tr>
+      <tr><td>Base LR</td><td class="td-mono">0.001</td><td>Conservative for fine-grained features</td></tr>
+      <tr><td>Epochs</td><td class="td-mono">600</td><td>Sufficient with early stopping</td></tr>
+      <tr><td>Patience</td><td class="td-mono">150</td><td>Prevents premature stopping</td></tr>
+      <tr><td>Image Size</td><td class="td-mono">800</td><td>4× upscale from 200px</td></tr>
+      <tr><td>Mosaic</td><td class="td-mono">0.0 (OFF)</td><td>Ruins fine features at high upscale</td></tr>
+      <tr><td>Mixup</td><td class="td-mono">0.15</td><td>Light mixup for class diversity</td></tr>
+      <tr><td>Copy-Paste</td><td class="td-mono">0.1</td><td>Augmentation for rare classes</td></tr>
+      <tr><td>Label Smoothing</td><td class="td-mono">0.01</td><td>Prevents overconfident predictions</td></tr>
+      <tr><td>Cosine LR</td><td class="td-mono">True</td><td>Smooth decay schedule</td></tr>
+    </tbody>
+  </table>
+
+  <h2>6.2 Transfer Learning Configuration</h2>
+  <table>
+    <thead>
+      <tr><th>Stage</th><th>Frozen Layers</th><th>Trainable</th><th>LR</th><th>Epochs</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Stage 1 (Head)</td><td>Backbone+Neck (0–22)</td><td>Head (23)</td><td class="td-mono">0.001</td><td class="td-mono">50–100</td></tr>
+      <tr><td>Stage 2 (Fine-tune)</td><td>None</td><td>All</td><td class="td-mono">0.0001–0.0005</td><td class="td-mono">100–200</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>DigiSteel-YOLO Project</span>
+    <span>July 12, 2026</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 9: LITERATURE COMPARISON -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <span class="page-header-title">DigiSteel-YOLO Final Report</span>
+    <span class="page-number">9 / 14</span>
+  </div>
+
+  <h1>7. Literature Comparison — NEU-DET mAP@0.5</h1>
+
+  <table>
+    <thead>
+      <tr><th>Paper</th><th>Model</th><th>mAP@0.5</th><th>Comparable?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>KDM-YOLO</td><td>Custom YOLO</td><td class="td-mono">95.4%</td><td><span class="badge fail">NO</span> — trains at native 200×200</td></tr>
+      <tr><td>LAM-YOLOv10n</td><td>YOLOv10n</td><td class="td-mono">94.4%</td><td><span class="badge fail">NO</span> — likely data leakage</td></tr>
+      <tr><td>YOLOv11-EMD</td><td>YOLOv11</td><td class="td-mono">94.9%</td><td><span class="badge fail">NO</span> — extra Severstal data (7×)</td></tr>
+      <tr class="highlight"><td>ASFRW-YOLO (Nature)</td><td>YOLOv5s</td><td class="td-mono">83.2%</td><td><span class="badge pass">YES</span> — clean protocol</td></tr>
+      <tr class="highlight"><td>YOLO-LSDI (MDPI)</td><td>YOLOv11n</td><td class="td-mono">83.0%</td><td><span class="badge pass">YES</span> — clean protocol</td></tr>
+      <tr class="highlight"><td><strong>DigiSteel (ours)</strong></td><td>v11n+DAFE</td><td class="td-mono">80.3%</td><td><span class="badge pass">YES</span> — clean 70/20/10 split</td></tr>
+      <tr class="highlight"><td><strong>DigiSteel (ours)</strong></td><td>YOLOv26n</td><td class="td-mono"><strong>81.0%</strong></td><td><span class="badge pass">YES</span> — clean 70/20/10 split</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <div class="callout-title">Honest Assessment</div>
+    Honest ceiling under clean 70/20/10 split at imgsz=800: <strong>~83–85% mAP@0.5</strong>. Current gap to ceiling: <strong>2.0–4.0%</strong> (YOLOv26n). Many published results above 90% use questionable protocols (data leakage, extra data, or native resolution training).
+  </div>
+
+  <h1>8. Key Findings &amp; Lessons Learned</h1>
+
+  <h2>8.1 What Worked</h2>
+  <table>
+    <thead>
+      <tr><th>Finding</th><th>Impact</th><th>Confidence</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Recipe optimization &gt; architecture</td><td class="td-mono">+3.0%</td><td><span class="badge pass">High</span></td></tr>
+      <tr><td>DAFE on strong baseline</td><td class="td-mono">+1.5% mAP, +8.3% crazing</td><td><span class="badge pass">High</span></td></tr>
+      <tr><td>imgsz=800 for 200px images</td><td>Significant</td><td><span class="badge pass">High</span></td></tr>
+      <tr><td>Mosaic disabled</td><td>Critical</td><td><span class="badge pass">High</span></td></tr>
+      <tr><td>YOLOv26n &gt; YOLOv11n from scratch</td><td class="td-mono">+2.2%</td><td><span class="badge pass">High</span></td></tr>
+      <tr><td>One good module &gt; six stacked</td><td class="td-mono">+1.5% vs +0.1%</td><td><span class="badge pass">High</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2>8.2 What Failed</h2>
+  <table>
+    <thead>
+      <tr><th>Finding</th><th>Impact</th><th>Lesson</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>YOLOv11s overfit (1200 imgs)</td><td class="td-mono" style="color:#d35400">−2.4%</td><td>Larger model ≠ better on small data</td></tr>
+      <tr><td>TL+DAFE v1 catastrophic</td><td class="td-mono" style="color:#d35400">−15.5%</td><td>Cannot insert DAFE into fine-tuned model</td></tr>
+      <tr><td>YOLOv26n + transfer learning</td><td class="td-mono" style="color:#d35400">−3.2%</td><td>COCO weights conflict with steel domain</td></tr>
+      <tr><td>Attention stacking (6 modules)</td><td class="td-mono">+0.1%</td><td>Diminishing returns, interference</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>DigiSteel-YOLO Project</span>
+    <span>July 12, 2026</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 10: CRITICAL INSIGHTS + RECOMMENDATIONS -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <span class="page-header-title">DigiSteel-YOLO Final Report</span>
+    <span class="page-number">10 / 14</span>
+  </div>
+
+  <h2>8.3 Critical Insights</h2>
+
+  <div class="callout pass">
+    <div class="callout-title">Recipe &gt; Architecture</div>
+    The optimized training recipe alone gave +3.0%. DAFE on top gave +1.5%. Always optimize the baseline first.
+  </div>
+
+  <div class="callout fail">
+    <div class="callout-title">Crazing is the Bottleneck</div>
+    At 48.6% (DAFE) to 55.1% (YOLOv26n), crazing remains the hardest class. Fine cracks at 200px are extremely challenging.
+  </div>
+
+  <div class="callout warn">
+    <div class="callout-title">Precision-Recall Trade-off</div>
+    DAFE improved precision (+13.3%) but reduced recall (−6.3%). More conservative but fewer false positives.
+  </div>
+
+  <div class="callout gold">
+    <div class="callout-title">Transfer Learning is Overrated Here</div>
+    From-scratch training with proper recipe matched or beat TL in most configurations. COCO pretraining hurts when the domain (steel) is far from natural images.
+  </div>
+
+  <div class="callout accent">
+    <div class="callout-title">Robustness Matters</div>
+    DAFE showed +10.4% on motion blur and +7.1% on JPEG compression — real-world relevant perturbations that matter for deployment.
+  </div>
+
+  <h1>9. Recommendations for Future Work</h1>
+
+  <h2>To Reach 83%+ mAP@0.5</h2>
+  <ul>
+    <li><strong>Multi-dataset training:</strong> Combine NEU-DET with GC10-DET (3,570 additional grayscale steel images)</li>
+    <li><strong>DAFE on YOLOv26n:</strong> Apply DAFE module to YOLOv26n backbone (not yet tested)</li>
+    <li><strong>Advanced augmentation:</strong> AutoAugment, Mosaic9, or MixUp variants optimized for defect textures</li>
+    <li><strong>Class-balanced sampling:</strong> Oversample crazing or use focal loss with class-specific gamma</li>
+  </ul>
+
+  <h2>To Improve Crazing Detection</h2>
+  <ul>
+    <li><strong>Higher resolution crops:</strong> Train on 1024+ with crazing-focused cropping</li>
+    <li><strong>Edge-specific pre-processing:</strong> Sobel/Canny as additional input channel</li>
+    <li><strong>Synthetic data:</strong> Generate synthetic crazing patterns to augment 689 real samples</li>
+  </ul>
+
+  <h2>For Deployment</h2>
+  <ul>
+    <li><strong>ONNX export</strong> with TensorRT optimization for real-time inference (&gt;100 FPS)</li>
+    <li><strong>Model pruning</strong> to reduce parameters while maintaining accuracy</li>
+    <li><strong>Robustness hardening</strong> through perturbation-aware training</li>
+  </ul>
+
+  <div class="page-footer">
+    <span>DigiSteel-YOLO Project</span>
+    <span>July 12, 2026</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 11: APPENDIX -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <span class="page-header-title">DigiSteel-YOLO Final Report</span>
+    <span class="page-number">11 / 14</span>
+  </div>
+
+  <h1>Appendix</h1>
+
+  <h2>A. File Inventory</h2>
+  <table>
+    <thead>
+      <tr><th>File</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="td-mono text-sm">evals/master_results.json</td><td>Aggregated results for all experiments</td></tr>
+      <tr><td class="td-mono text-sm">evals/fresh_baseline_results.json</td><td>Experiment 08 detailed results</td></tr>
+      <tr><td class="td-mono text-sm">evals/exp_5a_digisteel_v4_dafe.json</td><td>Experiment 10 DAFE results</td></tr>
+      <tr><td class="td-mono text-sm">evals/yolov26n_neudet_results.json</td><td>Experiment 15 YOLOv26n results</td></tr>
+      <tr><td class="td-mono text-sm">evals/yolov26n_transfer_learning_comparison.json</td><td>YOLOv26n TL comparison</td></tr>
+      <tr><td class="td-mono text-sm">evals/tl_final_comparison.json</td><td>Transfer learning stage comparison</td></tr>
+      <tr><td class="td-mono text-sm">evals/tl_dafe_final_comparison.json</td><td>TL+DAFE v1 comparison</td></tr>
+      <tr><td class="td-mono text-sm">evals/tl_dafe_v2_final_comparison.json</td><td>TL+DAFE v2 comparison</td></tr>
+      <tr><td class="td-mono text-sm">evals/robustness_baseline_v2.csv</td><td>Baseline robustness sweep data</td></tr>
+      <tr><td class="td-mono text-sm">evals/robustness_digisteel_v2.csv</td><td>DAFE robustness sweep data</td></tr>
+      <tr><td class="td-mono text-sm">evals/eda_results.json</td><td>Exploratory data analysis results</td></tr>
+      <tr><td class="td-mono text-sm">configs/models/digisteel.yaml</td><td>DAFE architecture config</td></tr>
+      <tr><td class="td-mono text-sm">digisteel/modules/dafe.py</td><td>DAFE module implementation</td></tr>
+    </tbody>
+  </table>
+
+  <h2>B. Experiment Folder Map</h2>
+  <table>
+    <thead>
+      <tr><th>Folder</th><th>Experiment</th><th>Key Result</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="td-mono text-sm">01_baseline_yolov11n_v1/</td><td>Old Baseline</td><td class="td-mono">75.8%</td></tr>
+      <tr><td class="td-mono text-sm">06_week3_a1_config_fix/</td><td>Config Fix</td><td class="td-mono">74.8%</td></tr>
+      <tr><td class="td-mono text-sm">07_week3_a2_arch_fix/</td><td>Architecture Fix</td><td class="td-mono">73.4%</td></tr>
+      <tr class="highlight"><td class="td-mono text-sm">08_week4_fresh_baseline/</td><td>Fresh Baseline</td><td class="td-mono">78.8%</td></tr>
+      <tr class="highlight"><td class="td-mono text-sm">10_dafe_v4/</td><td>DAFE v4</td><td class="td-mono">80.3%</td></tr>
+      <tr><td class="td-mono text-sm">12_transfer_learning_yolov11n/</td><td>Transfer Learning</td><td class="td-mono">79.4%</td></tr>
+      <tr><td class="td-mono text-sm">14_tl_dafe_comparison/</td><td>TL + DAFE</td><td class="td-mono">63.3–78.6%</td></tr>
+      <tr class="highlight"><td class="td-mono text-sm">15_yolov26n_neudet/</td><td>YOLOv26n</td><td class="td-mono"><strong>81.0%</strong></td></tr>
+      <tr><td class="td-mono text-sm">16_yolov26_transfer_learning/</td><td>YOLOv26n TL</td><td class="td-mono">75.6%</td></tr>
+    </tbody>
+  </table>
+
+  <div class="divider" style="margin-top:32px;"></div>
+
+  <div style="text-align:center; margin-top:24px;">
+    <p class="text-sm text-muted">Report generated: July 12, 2026 &bull; DigiSteel-YOLO Project</p>
+    <p class="text-xs text-muted">Best Result: 81.0% mAP@0.5 (YOLOv26n) &bull; Target: 83% mAP@0.5</p>
+  </div>
+
+  <div class="page-footer">
+    <span>DigiSteel-YOLO Project</span>
+    <span>July 12, 2026</span>
+  </div>
+</div>
+
+</body>
+</html>

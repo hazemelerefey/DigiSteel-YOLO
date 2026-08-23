@@ -1,0 +1,6 @@
+{
+  "training_time_seconds": 19149.14622068405,
+  "copy_paste_used": 0.1,
+  "model": "yolov26n_dafe.yaml",
+  "pretrained": "yolo26n.pt"
+}

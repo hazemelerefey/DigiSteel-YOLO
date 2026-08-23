@@ -1,0 +1,30 @@
+{
+  "experiment": "yolov26n_dafe_neudet",
+  "model": "yolov26n_dafe.yaml",
+  "map50": 0.7528492622851827,
+  "map50_95": 0.41651588449305893,
+  "precision": 0.7247177201506729,
+  "recall": 0.7018450673959364,
+  "per_class_ap50": {
+    "crazing": 0.3575224504818226,
+    "inclusion": 0.8169482454555358,
+    "patches": 0.8358130765730161,
+    "pitted_surface": 0.767756863386015,
+    "rolled-in_scale": 0.7634408866006346,
+    "scratches": 0.9756140512140726
+  },
+  "training_time_hours": 5.32,
+  "copy_paste_used": 0.1,
+  "hyperparameters": {
+    "epochs": 600,
+    "patience": 150,
+    "batch": 16,
+    "imgsz": 800,
+    "optimizer": "AdamW",
+    "lr0": 0.001,
+    "mosaic": 0.0,
+    "mixup": 0.15,
+    "copy_paste": 0.1,
+    "cos_lr": true
+  }
+}

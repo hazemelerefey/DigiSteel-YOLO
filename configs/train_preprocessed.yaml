@@ -1,0 +1,48 @@
+# Training config for preprocessed dataset
+
+# Dataset
+data: datasets/NEU-DET/yolo_preprocessed/dataset.yaml
+
+# Model
+model: yolov11n.pt
+
+# Training
+epochs: 600
+patience: 150
+batch: 16
+imgsz: 320  # Match preprocessed size
+
+# Optimizer
+optimizer: AdamW
+lr0: 0.001
+lrf: 0.01
+cos_lr: true
+
+# Augmentation (optimized for preprocessed data)
+hsv_h: 0.0      # Grayscale
+hsv_s: 0.0      # Grayscale
+hsv_v: 0.4      # Brightness augmentation
+degrees: 10.0   # Small rotation
+translate: 0.1  # Small shift
+scale: 0.5      # Scale variation
+shear: 2.0      # Minimal shear
+perspective: 0.0
+flipud: 0.0     # No vertical flip (defects have orientation)
+fliplr: 0.5     # Horizontal flip OK
+mosaic: 1.0     # Full mosaic
+mixup: 0.1      # Light mixup
+copy_paste: 0.3 # Increased for class balancing
+erasing: 0.4    # Random erasing
+crop_fraction: 0.5
+
+# Loss
+loss: WIoU  # Better localization than CIoU
+
+# Class weights (inverse frequency)
+cls_pw:
+  - 1.45  # crazing
+  - 0.99  # inclusion
+  - 1.14  # patches
+  - 2.31  # pitted_surface
+  - 1.59  # rolled-in_scale
+  - 1.82  # scratches

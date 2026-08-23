@@ -1,0 +1,16 @@
+{
+  "stage": "feature_extraction",
+  "model": "yolo26n.pt",
+  "mAP50": 0.744147344270032,
+  "mAP50_95": 0.4227533686076217,
+  "precision": 0.6395235030988956,
+  "recall": 0.73216065582899,
+  "per_class_ap50": {
+    "crazing": 0.4290836380412311,
+    "inclusion": 0.8161121164788112,
+    "patches": 0.8603247012272811,
+    "pitted_surface": 0.7074206797151865,
+    "rolled-in_scale": 0.7083750672119238,
+    "scratches": 0.9435678629457589
+  }
+}
