@@ -45,65 +45,99 @@ except Exception as e:
     clip_model = None
     clip_processor = None
 
-# Semantic prompts for domain classification
+# ─────────────────────────────────────────────────────────────────────────────
+# CLIP Domain Guard Design
+#
+# FIX 1 — False rejections of valid steel defect images (e.g. "patches"):
+#   Expanded POSITIVE_PROMPTS to cover all 6 NEU-DET defect morphologies so
+#   that CLIP has strong in-domain anchors for every defect class. Added a
+#   REJECTION_MARGIN: neg_prob must exceed pos_prob by ≥15pp before rejecting,
+#   eliminating borderline false rejections on grainy/textured steel images.
+#
+# FIX 2 — Rejection message exposes internal CLIP prompt categories:
+#   Rejection now returns a clean professional message with no internal label.
+# ─────────────────────────────────────────────────────────────────────────────
+
 POSITIVE_PROMPTS = [
+    # General steel surface concepts
     "close-up industrial steel plate surface",
-    "hot-rolled steel sheet texture",
-    "steel surface with defects"
+    "hot-rolled flat steel sheet texture",
+    "steel surface with defects",
+    "metallic surface with surface anomalies",
+    # Morphology-specific anchors — covers all 6 NEU-DET classes
+    "grayscale steel surface with crazing cracks",       # crazing
+    "gray steel sheet with inclusion defects",           # inclusion
+    "steel surface with patch-like surface anomalies",   # patches
+    "metallic surface with pitting defects",             # pitted_surface
+    "industrial steel with rolled-in scale markings",    # rolled-in_scale
+    "steel surface with linear scratch defects",         # scratches
 ]
+
 NEGATIVE_PROMPTS = [
-    "human face",
-    "photo of a person",
-    "website screenshot",
-    "outdoor natural landscape",
-    "graphic design banner",
-    "colorful abstract image",
-    "text document"
+    # Only unambiguously non-industrial, non-metallic categories
+    "photograph of a human face or person",
+    "outdoor natural landscape with trees or sky",
+    "screenshot of a website or user interface",
+    "colorful poster or graphic design artwork",
+    "printed text document or page of writing",
+    "food photograph or meal image",
 ]
+
 ALL_PROMPTS = POSITIVE_PROMPTS + NEGATIVE_PROMPTS
+
+# Rejection margin: neg_prob must exceed pos_prob by at least this fraction.
+# Eliminates false rejections of ambiguous steel-texture images.
+REJECTION_MARGIN = 0.15
 
 
 def _steel_surface_gate(image: Image.Image) -> tuple[bool, str]:
-    """Reject obvious out-of-domain images before defect detection using zero-shot CLIP.
+    """Zero-shot CLIP semantic domain guard.
 
-    This semantic gate catches natural, colorful, non-industrial images and screenshots
-    with high reliability compared to brittle heuristic pixel checks.
+    Returns (True, pass_msg) if the image is a plausible steel surface,
+    or (False, rejection_msg) if clearly out-of-domain.
+
+    The rejection message never discloses internal CLIP prompt categories.
+    Requires neg_prob to exceed pos_prob by REJECTION_MARGIN to reject,
+    preventing false rejections of valid grainy/textured steel images.
     """
     if min(image.size) < 96:
-        return False, "Input image is too small for reliable steel-surface inspection."
+        return False, "Image too small for inspection (minimum 96×96 px)."
 
     if clip_model is None or clip_processor is None:
-        # Fallback if CLIP fails to load (allow inference)
-        return True, "Input passed (CLIP disabled)."
+        return True, "Input passed (CLIP guard disabled)."
 
     try:
         inputs = clip_processor(
-            text=ALL_PROMPTS, 
-            images=image.convert("RGB"), 
-            return_tensors="pt", 
+            text=ALL_PROMPTS,
+            images=image.convert("RGB"),
+            return_tensors="pt",
             padding=True
         ).to(CLIP_DEVICE)
-        
+
         with torch.no_grad():
             outputs = clip_model(**inputs)
-            
+
         logits_per_image = outputs.logits_per_image
         probs = logits_per_image.softmax(dim=1).cpu().numpy()[0]
-        
-        # Calculate total probability for positive vs negative classes
-        pos_prob = sum(probs[:len(POSITIVE_PROMPTS)])
-        neg_prob = sum(probs[len(POSITIVE_PROMPTS):])
-        
-        if neg_prob > pos_prob:
-            # Find the highest scoring negative prompt for a descriptive message
-            highest_neg_idx = np.argmax(probs[len(POSITIVE_PROMPTS):])
-            detected_concept = NEGATIVE_PROMPTS[highest_neg_idx]
-            return False, f"Input appears to be a '{detected_concept}', not a steel surface."
-            
+
+        pos_prob = float(sum(probs[:len(POSITIVE_PROMPTS)]))
+        neg_prob = float(sum(probs[len(POSITIVE_PROMPTS):]))
+
+        # Require a meaningful margin before rejecting to avoid false positives
+        # on borderline steel-texture images (e.g., patches, pitted surface)
+        if neg_prob > pos_prob + REJECTION_MARGIN:
+            return (
+                False,
+                "The uploaded image does not appear to be a steel surface. "
+                "Please upload an image of a hot-rolled flat steel sheet "
+                "for defect inspection."
+            )
+
         return True, "Input passed the semantic steel-surface domain check."
+
     except Exception as e:
         print(f"Error during CLIP domain check: {e}")
-        return True, "Input passed (CLIP error)."
+        return True, "Input passed (CLIP error fallback)."
 
 
 def _prediction_rows(result: Any) -> list[list[Any]]:
