@@ -90,18 +90,32 @@ ALL_PROMPTS = POSITIVE_PROMPTS + NEGATIVE_PROMPTS
 REJECTION_MARGIN = 0.15
 
 
+def is_grayscale(image: Image.Image, threshold: float = 2.0) -> bool:
+    """
+    Check if an image is effectively grayscale by computing the variance
+    across the RGB channels. A perfectly grayscale image has R=G=B, so
+    variance is 0.
+    """
+    img_rgb = image.convert("RGB")
+    arr = np.array(img_rgb, dtype=np.float32)
+    mean_variance = float(np.mean(np.var(arr, axis=2)))
+    return mean_variance < threshold
+
+
 def _steel_surface_gate(image: Image.Image) -> tuple[bool, str]:
-    """Zero-shot CLIP semantic domain guard.
+    """Zero-shot CLIP semantic domain guard with Grayscale Heuristic Bypass.
 
     Returns (True, pass_msg) if the image is a plausible steel surface,
     or (False, rejection_msg) if clearly out-of-domain.
-
-    The rejection message never discloses internal CLIP prompt categories.
-    Requires neg_prob to exceed pos_prob by REJECTION_MARGIN to reject,
-    preventing false rejections of valid grainy/textured steel images.
     """
     if min(image.size) < 96:
         return False, "Image too small for inspection (minimum 96×96 px)."
+
+    # HEURISTIC BYPASS: Hot-rolled flat steel surfaces are inherently grayscale.
+    # If the image lacks color, it's highly likely to be an in-domain industrial image
+    # (or at least, a grayscale screenshot of one). Bypass the heavy CLIP model.
+    if is_grayscale(image):
+        return True, "Input passed domain check (Grayscale heuristic match)."
 
     if clip_model is None or clip_processor is None:
         return True, "Input passed (CLIP guard disabled)."
