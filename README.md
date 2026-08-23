@@ -71,7 +71,7 @@ Evaluated on the **NEU-DET benchmark** (6-class hot-rolled steel surface defect 
 
 ![DAFEGate-YOLO Full Pipeline Macro Architecture](figures/02_Figure2a_Macro_Architecture.png)
 
-*Figure 2a: Complete DAFEGate-YOLO detection pipeline. DAFEGate is inserted at the P3 stage (80×80 feature maps, 256 channels) of the YOLOv11n backbone, before the neck and detection head.*
+*Macro Architecture: Complete DAFEGate-YOLO detection pipeline. DAFEGate is inserted at the P3 stage (80×80 feature maps, 256 channels) of the YOLOv11n backbone, before the neck and detection head.*
 
 ---
 
@@ -79,7 +79,7 @@ Evaluated on the **NEU-DET benchmark** (6-class hot-rolled steel surface defect 
 
 ![DAFEGate v4 Internal Module Diagram](figures/03_Figure2b_DAFEGate_Micro_Architecture.png)
 
-*Figure 2b: Internal structure of the DAFEGate v4 module. The input feature map is processed by two specialized branches (EdgeAwareConv and TextureBranch), fused via SE channel attention, and merged with the skip connection through an additive residual.*
+*Micro Architecture: Internal structure of the DAFEGate v4 module. The input feature map is processed by two specialized branches (EdgeAwareConv and TextureBranch), fused via SE channel attention, and merged with the skip connection through an additive residual.*
 
 ---
 
@@ -103,13 +103,13 @@ The additive residual is the decisive design choice: the skip connection **guara
 
 ![Morphological Duality — Linear vs Texture Defects](figures/01a_Figure1a_Morphological_Duality.png)
 
-*Figure 1a: Morphological duality of steel surface defects. Left: Linear defects (crazing, scratches) require edge-frequency features. Right: Surface anomalies (inclusions, pitting, scale) require texture-variance features.*
+*Defect Category Motivation: Morphological duality of steel surface defects. Left: Linear defects (crazing, scratches) require edge-frequency features. Right: Surface anomalies (inclusions, pitting, scale) require texture-variance features.*
 
-### All 6 NEU-DET Defect Classes (Figure 1b)
+### All 6 NEU-DET Defect Classes
 
 ![NEU-DET Six Class Dataset Profile](figures/01b_Figure1b_NEU_DET_Six_Classes.png)
 
-*Figure 1b: Ground-truth annotated samples from all 6 NEU-DET defect classes in the hot-rolled flat steel surface dataset.*
+*NEU-DET Defect Classes: Ground-truth annotated samples from all 6 NEU-DET defect classes in the hot-rolled flat steel surface dataset.*
 
 ### Class Distribution
 
