@@ -105,7 +105,7 @@ The additive residual is the decisive design choice: the skip connection **guara
 
 *Figure 1a: Morphological duality of steel surface defects. Left: Linear defects (crazing, scratches) require edge-frequency features. Right: Surface anomalies (inclusions, pitting, scale) require texture-variance features.*
 
-### All 6 NEU-DET Defect Classes (Figure 1b)
+### All 6 NEU-DET Defect Classes
 
 ![NEU-DET Six Class Dataset Profile](figures/01b_Figure1b_NEU_DET_Six_Classes.png)
 
