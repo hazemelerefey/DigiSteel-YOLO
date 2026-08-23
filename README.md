@@ -67,7 +67,7 @@ Evaluated on the **NEU-DET benchmark** (6-class hot-rolled steel surface defect 
 
 ## 🏗️ Architecture
 
-### Full Pipeline — Macro Architecture (Figure 2a)
+### Full Pipeline — Macro Architecture 
 
 ![DAFEGate-YOLO Full Pipeline Macro Architecture](figures/02_Figure2a_Macro_Architecture.png)
 
@@ -75,7 +75,7 @@ Evaluated on the **NEU-DET benchmark** (6-class hot-rolled steel surface defect 
 
 ---
 
-### DAFEGate Module — Micro Architecture (Figure 2b)
+### DAFEGate Module — Micro Architecture 
 
 ![DAFEGate v4 Internal Module Diagram](figures/03_Figure2b_DAFEGate_Micro_Architecture.png)
 
@@ -99,7 +99,7 @@ The additive residual is the decisive design choice: the skip connection **guara
 
 ## 🔍 Dataset: Morphological Duality
 
-### Defect Category Motivation (Figure 1a)
+### Defect Category Motivation 
 
 ![Morphological Duality — Linear vs Texture Defects](figures/01a_Figure1a_Morphological_Duality.png)
 
