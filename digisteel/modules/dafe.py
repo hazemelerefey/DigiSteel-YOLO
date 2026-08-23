@@ -241,3 +241,86 @@ class DAFEEdgeOnly(nn.Module):
         # Residual with learnable alpha
         alpha = torch.sigmoid(self.alpha_raw)
         return x + alpha * enhanced
+class DAFEGate(nn.Module):
+    """
+    Defect-Aware Feature Enhancement Gate (v4) for Ultralytics YOLO.
+
+    Combines proven components from DAFE v2 with Ultralytics-compatible
+    (c1, c2) signature for seamless YAML integration.
+
+    Architecture (per forward pass):
+        input x: (B, C, H, W)
+          |-> EdgeAwareConv  -> (B, C//2, H, W)   [Sobel-initialized edge features]
+          |-> TextureBranch  -> (B, C//2, H, W)   [local variance texture features]
+          |-> concat         -> (B, C, H, W)
+          |-> channel_att    -> (B, C, 1, 1)       [squeeze-excite over C]
+          |-> fusion conv    -> (B, C, H, W)       [1x1 conv + BN + SiLU]
+          |-> alpha * enhanced
+        output: x + alpha * enhanced               [additive residual, always]
+
+    Key design choices:
+    - Additive residual (not multiplicative gate): gradient=1.0 through skip
+      path regardless of alpha. Multiplicative gates halve gradients when
+      gate~0.5, causing slow learning death spiral over long training.
+    - C//2 channel split: forces edge and texture branches to specialize.
+      Full-C branches learn redundant features (confirmed in v3 experiments).
+    - Channel attention: lets the model decide which channels to enhance.
+      Missing in v3 (replaced by simpler gate), restored here.
+    - alpha_raw=-2.2 -> sigmoid(-2.2) ~ 0.1 at init: near-identity at epoch 0,
+      preserving pretrained COCO backbone features. Learns freely during training.
+    - Ultralytics YAML API: (c1, c2) signature. Lazy init when c1=0.
+    """
+
+    def __init__(self, c1: int = 0, c2: int = None):
+        super().__init__()
+        self._channels = c1
+        self.reduction = 8
+        if c1 > 0:
+            self._build(c1)
+
+    def _build(self, channels: int):
+        if channels % 2 != 0:
+            raise ValueError(f"DAFEGate requires even channel count, got {channels}")
+
+        self._channels = channels
+        branch_ch = channels // 2
+
+        self.edge_branch = EdgeAwareConv(channels, branch_ch)
+        self.texture_branch = TextureBranch(branch_ch)
+
+        self.fusion = nn.Sequential(
+            nn.Conv2d(channels, channels, kernel_size=1, bias=False),
+            nn.BatchNorm2d(channels),
+            nn.SiLU(inplace=True),
+        )
+
+        self.channel_att = nn.Sequential(
+            nn.AdaptiveAvgPool2d(1),
+            nn.Flatten(),
+            nn.Linear(channels, channels // self.reduction, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Linear(channels // self.reduction, channels, bias=False),
+            nn.Sigmoid(),
+        )
+
+        # Learnable residual scaling: sigmoid(-2.2) ~ 0.1
+        if not hasattr(self, "alpha_raw"):
+            self.alpha_raw = nn.Parameter(torch.tensor(-2.2))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if x.shape[1] != self._channels:
+            self._build(x.shape[1])
+            self.to(x.device)
+
+        # Dual-branch feature extraction
+        edge_feat = self.edge_branch(x)          # (B, C//2, H, W)
+        texture_feat = self.texture_branch(edge_feat)  # (B, C//2, H, W)
+
+        # Concatenate and apply channel attention
+        fused = torch.cat([edge_feat, texture_feat], dim=1)  # (B, C, H, W)
+        att = self.channel_att(fused).unsqueeze(-1).unsqueeze(-1)  # (B, C, 1, 1)
+        enhanced = self.fusion(fused * att)  # (B, C, H, W)
+
+        # Additive residual with learnable alpha
+        alpha = torch.sigmoid(self.alpha_raw)
+        return x + alpha * enhanced
