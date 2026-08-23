@@ -1,0 +1,56 @@
+# DigiSteel-YOLO v4 Architecture
+# YOLOv11n backbone (pretrained) + DAFE at P2 and P3
+#
+# Novel contribution: DAFE inserted at P2 and P3 positions to enhance
+# edge detection (scratches, crazing) and texture analysis (pitting, scale)
+# at the spatial resolutions where these features are most visible.
+#
+# Weight transfer strategy:
+#   - All YOLOv11n layers load from pretrained weights (with index mapping)
+#   - DAFE layers (L3, L6) are randomly initialized (novel contribution)
+#   - Head layers are shifted +2 due to DAFE insertion
+#
+# Register custom modules before loading:
+#   from digisteel.engine.trainer import register_custom_modules
+#   register_custom_modules()
+
+nc: 6
+scales:
+  n: [0.50, 0.25, 1024]
+
+# Backbone: Standard YOLOv11n + DAFE at P2 and P3
+backbone:
+  # [from, repeats, module, args]
+  - [-1, 1, Conv, [64, 3, 2]]           # 0-P1/2
+  - [-1, 1, Conv, [128, 3, 2]]          # 1-P2/4
+  - [-1, 2, C3k2, [256, False, 0.25]]   # 2-P2 features
+  - [-1, 1, DAFE, [256, 8]]             # 3 ★ DAFE on P2 (edge detection)
+  - [-1, 1, Conv, [256, 3, 2]]          # 4-P3/8
+  - [-1, 2, C3k2, [512, False, 0.25]]   # 5-P3 features
+  - [-1, 1, DAFE, [512, 8]]             # 6 ★ DAFE on P3 (texture analysis)
+  - [-1, 1, Conv, [512, 3, 2]]          # 7-P4/16
+  - [-1, 2, C3k2, [512, True]]          # 8-P4 features
+  - [-1, 1, Conv, [1024, 3, 2]]         # 9-P5/32
+  - [-1, 2, C3k2, [1024, True]]         # 10-P5 features
+  - [-1, 1, SPPF, [1024, 5]]            # 11-SPPF
+  - [-1, 2, C2PSA, [1024]]              # 12-C2PSA attention
+
+# Neck: PAN-FPN (same as YOLOv11n, indices shifted +2 for DAFE)
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 13
+  - [[-1, 8], 1, Concat, [1]]                     # 14 cat P4 (from L8)
+  - [-1, 2, C3k2, [512, False]]                   # 15
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 16
+  - [[-1, 6], 1, Concat, [1]]                     # 17 cat P3 (from DAFE L6)
+  - [-1, 2, C3k2, [256, False]]                   # 18 P3/8-small
+
+  - [-1, 1, Conv, [256, 3, 2]]                    # 19
+  - [[-1, 15], 1, Concat, [1]]                    # 20 cat P4 (from L15)
+  - [-1, 2, C3k2, [512, False]]                   # 21 P4/16-medium
+
+  - [-1, 1, Conv, [512, 3, 2]]                    # 22
+  - [[-1, 12], 1, Concat, [1]]                    # 23 cat P5 (from C2PSA L12)
+  - [-1, 2, C3k2, [1024, True]]                   # 24 P5/32-large
+
+  - [[18, 21, 24], 1, Detect, [nc]]               # 25 Detect(P3, P4, P5)

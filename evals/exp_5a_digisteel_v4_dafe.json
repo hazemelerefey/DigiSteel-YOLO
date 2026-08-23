@@ -1,0 +1,47 @@
+{
+  "experiment": "5A_digisteel_v4_dafe",
+  "architecture": "YOLOv11n + DAFE (P2 + P3)",
+  "model": "yolo11n",
+  "weights": "D:\\DigiSteel-Yolo\\DigiSteel-YOLO\\runs\\detect\\exp_5a_digisteel_v4_dafe\\weights\\best.pt",
+  "map50": 0.7890981662924115,
+  "map50_95": 0.44640042293065385,
+  "precision": 0.768952627204865,
+  "recall": 0.7022113414245945,
+  "per_class_ap50": {
+    "crazing": 0.3261727990798791,
+    "inclusion": 0.9071892587110736,
+    "patches": 0.8904312487778729,
+    "pitted_surface": 0.8243453887463943,
+    "rolled-in_scale": 0.7940084419741327,
+    "scratches": 0.9924418604651162
+  },
+  "training_time_hours": 4.25,
+  "copy_paste_used": 0.1,
+  "fps": 42.47428066873519,
+  "hyperparameters": {
+    "epochs": 600,
+    "patience": 150,
+    "batch": 16,
+    "imgsz": 800,
+    "optimizer": "AdamW",
+    "lr0": 0.001,
+    "mosaic": 0.0,
+    "mixup": 0.15,
+    "copy_paste": 0.1,
+    "cos_lr": true
+  },
+  "vs_baseline": {
+    "map50_delta": -0.0068931043812785475,
+    "map50_95_delta": -0.0016752960991555654,
+    "precision_delta": 0.04449420878569299,
+    "recall_delta": -0.052116220015788195,
+    "per_class_delta": {
+      "crazing": -0.07296634182390671,
+      "inclusion": 0.013496566672845711,
+      "patches": -0.0001608937175808789,
+      "pitted_surface": 0.0328183373676052,
+      "rolled-in_scale": -0.012897246160842202,
+      "scratches": -0.0016490486257928483
+    }
+  }
+}

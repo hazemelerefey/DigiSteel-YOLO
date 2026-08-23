@@ -1,0 +1,17 @@
+{
+  "phase": "Week3-A2",
+  "description": "Architecture fix \u2014 YOLOv11s + Conv (no Ghost) + CA at P3 + Inner-WIoU",
+  "mAP50": 0.734,
+  "mAP50_95": 0.3745,
+  "precision": 0.7005,
+  "recall": 0.7063,
+  "f1": 0.7034,
+  "per_class_mAP50": {
+    "crazing": 0.1287,
+    "inclusion": 0.3926,
+    "patches": 0.5549,
+    "pitted_surface": 0.4466,
+    "rolled-in_scale": 0.2302,
+    "scratches": 0.4938
+  }
+}

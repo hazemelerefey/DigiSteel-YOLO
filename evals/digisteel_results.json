@@ -1,0 +1,38 @@
+{
+  "model": "DigiSteel-YOLO",
+  "architecture": "YOLOv11n + DAFE (P2, P3)",
+  "dataset": "NEU-DET",
+  "image_size": 800,
+  "epochs": 300,
+  "best_epoch": 274,
+  "metrics": {
+    "mAP50": 0.7594673971672351,
+    "mAP50_95": 0.41869317622549096,
+    "precision": 0.7381121139217758,
+    "recall": 0.6945813764935588,
+    "f1": 0.7156854296109533
+  },
+  "params_m": 2.935332,
+  "baseline_comparison": {
+    "baseline_mAP50": 0.7583635140950818,
+    "delta_mAP50": 0.0011038830721532555
+  },
+  "dafe_config": {
+    "placement": [
+      "P2",
+      "P3"
+    ],
+    "edge_init": "Sobel",
+    "texture": "local_variance",
+    "attention": "channel_squeeze_excitation",
+    "residual": "learnable_alpha_sigmoid"
+  },
+  "per_class_mAP50": {
+    "crazing": 0.15808190313403764,
+    "inclusion": 0.4254872326318577,
+    "patches": 0.5843045506775323,
+    "pitted_surface": 0.48860051096561186,
+    "rolled-in_scale": 0.30153965065852034,
+    "scratches": 0.5541452092853858
+  }
+}

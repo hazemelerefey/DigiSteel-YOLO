@@ -1,327 +1,269 @@
-<!-- DigiSteel-YOLO Banner -->
-<div align="center">
-  <a href="https://github.com/hazemelerefey/DigiSteel-YOLO">
-    <img src="assets/banner.png" alt="DigiSteel-YOLO Banner" width="100%" height="auto" />
-  </a>
-</div>
-
----
-
-# DigiSteel-YOLO
-
-### <div align="center">Comprehensive Robustness Study of Lightweight YOLO Detectors for Steel Surface Defect Detection</div>
-
 <div align="center">
 
-**The first systematic evaluation of YOLO detector robustness to real-world image degradations in industrial steel inspection.**
+# DAFEGate-YOLO
+### Dual-Branch Defect-Aware Feature Enhancement for Real-Time Surface Defect Detection in Hot-Rolled Flat Steel Production
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
-![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-red)
-![YOLO](https://img.shields.io/badge/YOLO-v11-brightgreen)
-![License](https://img.shields.io/badge/License-MIT-green)
-![Status](https://img.shields.io/badge/Status-Research%20in%20Progress-orange)
+<br>
 
-[Quickstart](#-quick-start) • [Documentation](#-documentation) • [Robustness Framework](#-robustness-evaluation-framework) • [Citation](#-citation)
+[![Hugging Face](https://img.shields.io/badge/🤗%20Hugging%20Face-Live%20Demo-orange?style=for-the-badge)](https://huggingface.co/spaces/hazemelerefy/DigiSteel-YOLO)
+[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-API%20Image-2496ED?style=for-the-badge&logo=docker)](https://hub.docker.com/r/hazemelerefy/digisteel-api)
+[![mAP@0.5](https://img.shields.io/badge/mAP%400.5-81.98%25-brightgreen?style=for-the-badge)](https://huggingface.co/spaces/hazemelerefy/DigiSteel-YOLO)
+[![Params](https://img.shields.io/badge/Parameters-2.69M-blue?style=for-the-badge)]()
+[![FPS](https://img.shields.io/badge/Inference-145%20FPS-yellow?style=for-the-badge)]()
+[![License](https://img.shields.io/badge/License-MIT-lightgrey?style=for-the-badge)](LICENSE)
+
+<br>
+
+**Product:** DigiSteel &nbsp;|&nbsp; **Team:** DigiSteel Team &nbsp;|&nbsp; **Model:** DAFEGate-YOLO
 
 </div>
 
 ---
 
-## About
+## 🔬 Overview
 
-**DigiSteel-YOLO** is a comprehensive robustness study for YOLO-based steel surface defect detectors. While existing research focuses on accuracy benchmarks (mAP on clean images), **no prior work systematically evaluates how these detectors perform under real-world industrial image degradations**.
+**DAFEGate-YOLO** is a novel real-time defect detection system purpose-built for **hot-rolled flat steel sheet production lines**. It introduces the **DAFEGate** (Defect-Aware Feature Enhancement Gate) module — a lightweight, plug-in backbone enhancement for YOLOv11n that explicitly addresses the core challenge of industrial steel inspection: the **morphological duality** between two fundamentally different defect categories.
 
-### Research Question
+> Steel surface defects split into two visual families that require entirely different detection strategies:
+> - **Linear defects** (*Crazing, Scratches*): High spatial-frequency, thin cracks detectable by **edge features**
+> - **Surface anomalies** (*Inclusions, Patches, Pitted Surface, Rolled-in Scale*): Low spatial-frequency irregularities detectable by **texture variance**
 
-> *How robust are lightweight YOLO detectors to real-world image degradations in steel surface defect detection, and can perturbation-aware training improve deployment reliability?*
-
-### Key Contributions
-
-1. **Standardized Robustness Evaluation Framework** — 6 perturbation types x 4 severity levels = 24 evaluation points per model per dataset
-2. **Perturbation-Aware Training Protocol** — Training with injected degradations to study robustness-accuracy tradeoffs
-3. **Multi-Dataset Validation** — Identical hyperparameters across NEU-DET and GC10-DET
-4. **Open-Source Benchmark** — Reproducible evaluation toolkit for the community
-
-### Why This Matters
-
-Steel defect detectors are deployed in harsh industrial environments where image quality degrades due to:
-- Camera defocus and lens contamination
-- Sensor noise and electrical interference
-- Lighting variation (over/underexposure)
-- Image compression during transmission
-- Environmental interference (fog, dust, vibration)
-
-**A detector that achieves 90% mAP on clean images but drops to 60% under blur is not production-ready.** This study quantifies these degradation patterns and proposes training strategies to mitigate them.
+Standard convolutions apply the same generic filters uniformly to both. **DAFEGate-YOLO** is the first model to solve this with **morphology-specialized dual branches** fused via channel attention and an additive residual highway.
 
 ---
 
-## Quick Start
+## ✨ Key Results
 
-### Installation
+Evaluated on the **NEU-DET benchmark** (6-class steel surface defect dataset, 1,800 images) under a rigorous clean **70/20/10 split protocol** — no data leakage, no cross-dataset augmentation.
+
+| Metric | Baseline (YOLOv11n) | **DAFEGate-YOLO** | Δ |
+|:---|:---:|:---:|:---:|
+| **mAP@0.5** | 79.35% | **81.98%** | **+2.63pp** |
+| **mAP@0.5:0.95** | 45.83% | **46.80%** | **+0.97pp** |
+| **Recall** | 76.24% | **79.79%** | **+3.55pp** |
+| **Crazing AP** | 43.60% | **49.10%** | **+5.50pp** |
+| **Parameters** | 2.59M | **2.69M** | **+3.7%** |
+| **Inference Speed** | — | **145 FPS** | Real-time ✅ |
+
+> **Crazing** — the hardest defect class (thin sub-pixel cracks) — improved by **+5.5pp**, directly validating the Sobel-initialized edge branch hypothesis.
+
+### Comparison with State-of-the-Art (Fair Protocol Only)
+
+| Model | mAP@0.5 | mAP@0.5:0.95 | Params | Speed |
+|:---|:---:|:---:|:---:|:---:|
+| ASFRW-YOLO | 83.2% | 46.4% | 6.20M | ~125 FPS |
+| YOLO-LSDI | 83.0% | — | 2.70M | 162.1 FPS |
+| EFEN-YOLOv8 | 80.4% | — | — | — |
+| MSFE-YOLO | 79.8% | — | 11.69M | 89.3 FPS |
+| ELS-YOLO | 79.5% | 43.2% | 2.36M | — |
+| **DAFEGate-YOLO (Ours)** | **81.98%** | **46.80%** | **2.69M** | **145 FPS** |
+
+> ✅ Highest **mAP@0.5:0.95** (localization precision) among all comparable models.  
+> ✅ Outperforms all **YOLOv11n-family** models on NEU-DET under clean protocol.
+
+---
+
+## 🏗️ Architecture: The DAFEGate Module
+
+DAFEGate is a lightweight plug-in module inserted at the **P3 stage** (80×80 feature maps, 256 channels) of the YOLOv11n backbone.
+
+```
+Input: x ∈ ℝ^(B × C × H × W)
+
+┌────────────────────────────────────────────────────┐
+│                  DAFEGate v4                       │
+│                                                    │
+│  x ──┬── EdgeAwareConv [Sobel-X/Y init] → E (C/2) │
+│      │                                             │
+│      └── TextureBranch [Local Variance] → T (C/2) │
+│                                                    │
+│  Concat(E, T) ─→ SE Channel Attention              │
+│                                                    │
+│  y = x + sigmoid(α) · h    [Additive Residual]    │
+│       (α initialized ≈ 0.10, fully learnable)     │
+└────────────────────────────────────────────────────┘
+
+Output: y ∈ ℝ^(B × C × H × W)
+```
+
+### Why Additive > Multiplicative?
+
+```
+Additive residual (ours):  ∂y/∂x = 1.0         → gradient always flows ✅
+Multiplicative gate (v3):  ∂y/∂x = σ(g) ≤ 1.0  → gradient suppressed  ❌
+```
+
+The additive residual is the decisive design choice: the skip connection **guarantees gradient flow** through all training epochs, eliminating the instability observed in multiplicative gating (DAFEGate v3).
+
+---
+
+## 🚀 Live Demos
+
+### 🌐 Web Interface (Hugging Face Space)
+Try the model directly in your browser — no setup required:
+
+**👉 [https://huggingface.co/spaces/hazemelerefy/DigiSteel-YOLO](https://huggingface.co/spaces/hazemelerefy/DigiSteel-YOLO)**
+
+Upload any steel surface image and receive:
+- Annotated bounding boxes with class labels and confidence scores
+- Semantic rejection message if the input is not a steel surface (powered by CLIP Zero-Shot Domain Guard)
+
+### 🐳 Docker REST API
+Deploy the full FastAPI server locally or on any cloud infrastructure:
 
 ```bash
-# Clone the repository
-git clone https://github.com/hazemelerefey/DigiSteel-YOLO.git
-cd DigiSteel-YOLO
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
-
-# Install dependencies
-pip install -r requirements.txt
-pip install -e .
+docker run -p 8000:8000 hazemelerefy/digisteel-api:latest
 ```
 
-### Run Robustness Evaluation
+**API Endpoints:**
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/` | Service health check |
+| `POST` | `/predict` | Upload image → returns JSON defect list |
+| `GET` | `/docs` | Swagger UI / interactive API documentation |
 
-```python
-from digisteel.perturbations import PerturbationSuite
-from digisteel.eval import RobustnessSweep
-
-# Initialize perturbation suite (6 types x 4 levels = 24 configs)
-suite = PerturbationSuite()
-print(suite.summary())
-
-# Run robustness sweep on a trained model
-sweep = RobustnessSweep(model_path="runs/baseline/weights/best.pt")
-results = sweep.run(dataset_path="datasets/NEU-DET/yolo", dataset_name="NEU-DET")
-sweep.save_results(results, "evals/baseline_robustness.csv")
-```
-
-### Apply Perturbations to Images
-
-```python
-import cv2
-from digisteel.perturbations import GaussianBlur, GaussianNoise, JPEGCompression
-
-# Load an image
-image = cv2.imread("steel_sample.jpg")
-
-# Apply different perturbations
-blurred = GaussianBlur(level=2).apply(image)      # sigma=3
-noisy = GaussianNoise(level=3, seed=42).apply(image)  # sigma=0.20
-compressed = JPEGCompression(level=2).apply(image)  # quality=50
-```
-
----
-
-## Robustness Evaluation Framework
-
-### Perturbation Matrix
-
-| Perturbation | Level 1 (Mild) | Level 2 (Moderate) | Level 3 (Severe) | Level 4 (Extreme) |
-|---|---|---|---|---|
-| **Gaussian Blur** | sigma=1 | sigma=3 | sigma=5 | sigma=7 |
-| **Motion Blur** | k=3 | k=5 | k=7 | k=9 |
-| **Gaussian Noise** | sigma=0.05 | sigma=0.10 | sigma=0.20 | sigma=0.30 |
-| **Brightness Shift** | delta=-30 | delta=-50 | delta=+30 | delta=+50 |
-| **Contrast Reduction** | factor=0.8 | factor=0.6 | factor=0.4 | factor=0.2 |
-| **JPEG Compression** | quality=80 | quality=50 | quality=30 | quality=15 |
-
-### Metrics (8 per evaluation point)
-
-| Metric | Description |
-|---|---|
-| mAP@0.5 | Mean Average Precision at IoU=0.5 |
-| mAP@0.5:0.95 | COCO mAP averaged over IoU 0.5..0.95 |
-| Precision | Positive predictive value |
-| Recall | True positive rate |
-| F1 | Harmonic mean of precision and recall |
-| FPS | Frames per second (inference speed) |
-| Parameters (M) | Model parameter count in millions |
-| GFLOPs | Floating-point operations per inference |
-
-### Output
-
-The framework produces a CSV/JSON with **192 data points per model per dataset** (24 perturbation configs x 8 metrics), enabling:
-- Per-perturbation degradation curves
-- Cross-model robustness comparison
-- Robustness-accuracy Pareto analysis
-- Per-defect-class vulnerability analysis
-
----
-
-## Datasets
-
-| Dataset | Images | Classes | Resolution | Source |
-|---|---|---|---|---|
-| **NEU-DET** | 1,800 | 6 | 200x200 grayscale | Northeastern University |
-| **GC10-DET** | 2,294 | 10 | 2048x1000 grayscale | Lv et al. |
-
-Both datasets are evaluated with **identical hyperparameters** to ensure fair cross-dataset comparison.
-
----
-
-## Model Variants
-
-We evaluate multiple YOLO configurations to study robustness across architectures:
-
-| Variant | Base | Modification | Purpose |
-|---|---|---|---|
-| **Baseline** | YOLOv11n | None | Reference performance |
-| **GhostConv** | YOLOv11n | GhostConv backbone | Lightweight variant |
-| **Inner-WIoU** | YOLOv11n | Inner-WIoU loss | Improved box regression |
-| **GhostConv + Inner-WIoU** | YOLOv11n | Both modifications | Combined lightweight variant |
-
-### GhostConv (Lightweight Backbone)
-
-Drop-in replacement for standard Conv2d using Ghost convolutions (Han et al., CVPR 2020). Reduces parameters by ~50% while maintaining accuracy.
-
-```python
-from digisteel.modules import GhostConv
-# Use as replacement for torch.nn.Conv2d
-```
-
-### Inner-WIoU (Composite Loss)
-
-Combines Inner-IoU (Zhang 2023) and WIoU v3 (Tong 2023) for improved bounding box regression.
-
-```python
-from digisteel.modules import InnerWIoULoss
-loss_fn = InnerWIoULoss(lambda_weight=0.5)
-loss = loss_fn(pred_boxes, target_boxes)
-```
-
----
-
-## Installation
-
-### Requirements
-
-- Python 3.10+
-- PyTorch 2.0+ with CUDA 12.x (or CPU-only)
-- Ultralytics YOLO
-- OpenCV, NumPy, Albumentations
-
-### Install from Source
-
+**Example Request:**
 ```bash
-git clone https://github.com/hazemelerefey/DigiSteel-YOLO.git
-cd DigiSteel-YOLO
-pip install -r requirements.txt
-pip install -e .
+curl -F "file=@steel_surface.jpg" http://localhost:8000/predict
 ```
 
-### Verify Installation
+**Example Response:**
+```json
+{
+  "message": "Input passed the semantic steel-surface domain check. Detected 3 defects.",
+  "defects": [
+    { "defect_name": "crazing", "confidence": 0.8743, "box": [12.1, 30.5, 187.2, 195.8] },
+    { "defect_name": "patches", "confidence": 0.6231, "box": [50.0, 70.2, 120.4, 140.1] }
+  ]
+}
+```
 
-```bash
-python -c "from digisteel.perturbations import PerturbationSuite; print(PerturbationSuite().summary())"
-python -c "from digisteel.modules import GhostConv, InnerWIoULoss; print('Modules OK')"
+### 🛡️ Zero-Shot CLIP Semantic Domain Guard
+Both deployments integrate a **semantic domain guard** using `openai/clip-vit-base-patch32` to reject out-of-domain inputs *before* running inference:
+
+```
+Non-steel input → "Domain Rejection: Input appears to be a 'text document', not a steel surface."
 ```
 
 ---
 
-## Repository Structure
+## 📁 Repository Structure
 
 ```
 DigiSteel-YOLO/
-├── digisteel/                        # Main package
-│   ├── modules/
-│   │   ├── ghost_conv.py            # GhostConv lightweight backbone
-│   │   └── inner_wiou.py            # Inner-WIoU composite loss
-│   ├── perturbations/               # Robustness evaluation toolkit
-│   │   ├── blur.py                  # Gaussian & motion blur
-│   │   ├── noise.py                 # Gaussian noise
-│   │   ├── brightness.py            # Brightness & contrast
-│   │   ├── jpeg.py                  # JPEG compression
-│   │   └── suite.py                 # Unified perturbation interface
-│   ├── eval/
-│   │   ├── metrics.py               # Detection metrics computation
-│   │   └── robustness_sweep.py      # Systematic evaluation framework
-│   ├── data/                        # Dataset loaders
-│   └── export/                      # Model export (ONNX)
 │
-├── configs/                         # YOLO configurations
-│   ├── yolov11n_baseline.yaml
-│   ├── yolov11n_a2_ghostconv.yaml
-│   ├── yolov11n_a3_innerwiou.yaml
-│   └── yolov11n_a2_a3.yaml
+├── submission_package/               ← Official artifact package for the team
+│   ├── 00_Master_Reference/          ← DigiSteel Master Research Document
+│   ├── 01_Publication_Figures/       ← All 11 publication figures (sequentially numbered)
+│   ├── 02_Research_Reports/          ← Ablation, forensic analysis, reference papers
+│   ├── 03_Model_Architecture_and_Configs/  ← dafe.py, model YAML, dataset config
+│   ├── 04_Deployment_and_Demos/      ← Gradio Space + Docker FastAPI code
+│   └── 05_Weights/                   ← best.pt (DAFEGate v4, mAP@0.5 = 81.98%)
 │
-├── tests/                           # Unit tests
-│   ├── test_ghost_conv.py
-│   ├── test_inner_wiou.py
-│   └── test_perturbations.py
-│
-├── .github/workflows/               # CI/CD
-│   ├── test.yml
-│   └── release.yml
-│
-├── README.md                        # This file
-├── PROJECT_GUIDE.md                 # Full project context
-├── CONTRIBUTING.md                  # Team collaboration guide
-├── LICENSE                          # MIT
-└── requirements.txt                 # Dependencies
+├── digisteel/modules/dafe.py         ← DAFEGate v4 PyTorch source code
+├── dafegate/modules/dafe.py          ← HF-compatible module bridge
+├── huggingface_space/                ← Gradio web application source
+├── Deployment/                       ← FastAPI + Docker production API
+├── configs/                          ← Model & training configuration YAMLs
+├── figures/                          ← Full publication figure suite
+├── docs/                             ← Research reports & ablation studies
+├── scripts/figure_generation/        ← Reproducible figure generation scripts
+└── evals/                            ← Raw experiment results & evaluation logs
 ```
 
 ---
 
-## Contributing
+## ⚙️ Local Setup
 
-See `CONTRIBUTING.md` for team collaboration guidelines.
+```bash
+git clone https://github.com/hazemelerefey/DigiSteel-YOLO.git
+cd DigiSteel-YOLO
+python -m venv venv
+venv\Scripts\activate           # Windows
+pip install -r huggingface_space/requirements.txt
+```
 
-### Team Members
+**Run the Gradio demo locally:**
+```bash
+python huggingface_space/app.py
+```
 
-| Name | Role | GitHub |
-|---|---|---|
-| **Hazem Elerefy** | Lead, WP1 | [@hazemelerefey](https://github.com/hazemelerefey) |
-| **Youssef Sherif** | WP2 | — |
-| **Mohamed Salah** | WP3 | — |
-| **Moamen Esmat** | WP4 | — |
-| **Mahmoud Hisham** | WP5 | — |
+**Run the FastAPI server locally:**
+```bash
+cd Deployment
+uvicorn Main:app --reload
+```
 
 ---
 
-## License
+## 📊 Defect Classes (NEU-DET Benchmark)
 
-**Code:** MIT License (see `LICENSE`)
-
-**Datasets:** Open-access under their respective licenses.
+| Class | Category | AP@0.5 (Baseline) | AP@0.5 (DAFEGate-YOLO) | Δ |
+|:---|:---|:---:|:---:|:---:|
+| **Crazing** | Linear / Edge | 43.6% | **49.1%** | **+5.5pp** |
+| **Inclusion** | Surface / Texture | 85.2% | **88.3%** | **+3.1pp** |
+| **Patches** | Surface / Texture | 91.0% | **91.7%** | +0.7pp |
+| **Pitted Surface** | Surface / Texture | 79.3% | **85.0%** | **+5.7pp** |
+| **Rolled-in Scale** | Surface / Texture | 77.9% | **78.8%** | +0.9pp |
+| **Scratches** | Linear / Edge | 99.0% | 98.9% | −0.1pp |
 
 ---
 
-## Citation
+## 🔬 Ablation Study Summary
 
-If you use DigiSteel-YOLO in your research, please cite:
+| Version | Key Design | mAP@0.5 | vs Baseline |
+|:---|:---|:---:|:---:|
+| DAFE v1 | C/2 splitting, additive residual, SE attention @ P2+P3 | 78.91% | −0.44pp |
+| DAFE v2 | Simplified texture branch | 78.64% | −0.71pp |
+| DAFEGate v3 | Full-C channels, multiplicative gate, no SE @ P2+P3 | 80.16% | +0.81pp |
+| **DAFEGate v4 (Final)** | **C/2 splitting, additive residual, SE @ P3 only** | **81.98%** | **+2.63pp** |
+
+---
+
+## 📄 Citation
+
+If you use DAFEGate-YOLO or this repository in your research, please cite:
 
 ```bibtex
-@software{digisteel2026,
-  title={DigiSteel-YOLO: Comprehensive Robustness Study of Lightweight YOLO Detectors for Steel Surface Defect Detection},
-  author={Elerefy, Hazem and Sherif, Youssef and Salah, Mohamed and Esmat, Moamen and Hisham, Mahmoud},
-  year={2026},
-  publisher={GitHub},
-  howpublished={\url{https://github.com/hazemelerefey/DigiSteel-YOLO}},
-  note={Graduation Project, Digilians (MCIT) Specialized Diploma in Applied AI \& Data Analytics}
+@article{digisteel2026dafegate,
+  title     = {DAFEGate-YOLO: Dual-Branch Defect-Aware Feature Enhancement for
+               Real-Time Surface Defect Detection in Hot-Rolled Flat Steel Production},
+  author    = {Elerefy, Hazem and Sherif, Youssef and Salah, Mohamed and
+               Esmat, Moamen and Hisham, Mahmoud},
+  journal   = {arXiv preprint},
+  year      = {2026},
+  note      = {Supervised by Dr. Tarek Ghoneimy.
+               Code: https://github.com/hazemelerefey/DigiSteel-YOLO.
+               Demo: https://huggingface.co/spaces/hazemelerefy/DigiSteel-YOLO}
 }
 ```
 
 ---
 
-## Contact & Support
+## 👥 DigiSteel Team
 
-- **Team Lead:** Hazem Elerefy
-- **Supervisor:** Dr. Tarek Ghoneimy
-- **Program:** Digilians (MCIT) Specialized Diploma in Applied AI & Data Analytics
-- **Questions?** See `CONTRIBUTING.md` or open an issue on GitHub
+| Role | Name |
+|:---|:---|
+| Lead Researcher & Architecture | Hazem Elerefy |
+| Experimental Research | Youssef Sherif |
+| Experimental Research | Mohamed Salah |
+| Experimental Research | Moamen Esmat |
+| Experimental Research | Mahmoud Hisham |
+| Supervisor | Dr. Tarek Ghoneimy |
 
 ---
 
-## Acknowledgments
+## 📜 License
 
-- **Ultralytics** — YOLO framework and ecosystem
-- **Han et al. (CVPR 2020)** — GhostNet / GhostConv
-- **Zhang et al. (2023)** — Inner-IoU loss (arXiv:2311.02877)
-- **Tong et al. (2023)** — WIoU v3 loss (arXiv:2301.10051)
-- **Song & Yan** — NEU-DET dataset
-- **Lv et al.** — GC10-DET dataset
+This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for details.
 
 ---
 
 <div align="center">
 
-**Built by the DigiSteel Team**
+**DAFEGate-YOLO** — Built by the **DigiSteel Team** for real-world hot-rolled flat steel production inspection.
 
-![Stars](https://img.shields.io/github/stars/hazemelerefey/DigiSteel-YOLO?style=social)
-![Forks](https://img.shields.io/github/forks/hazemelerefey/DigiSteel-YOLO?style=social)
+[![HF Space](https://img.shields.io/badge/🤗_Try_it_Live-Hugging_Face-orange?style=flat-square)](https://huggingface.co/spaces/hazemelerefy/DigiSteel-YOLO)
+[![Docker](https://img.shields.io/badge/Docker_API-hazemelerefy%2Fdigisteel--api-2496ED?style=flat-square&logo=docker)](https://hub.docker.com/r/hazemelerefy/digisteel-api)
 
 </div>

@@ -1,0 +1,16 @@
+# NEU-DET Dataset with Aggressive CLAHE (clipLimit=4.0)
+# Higher contrast enhancement for low-contrast steel defect images
+
+path: D:/DigiSteel-Yolo/DigiSteel-YOLO/datasets/NEU-DET/yolo_clahe4
+train: images/train
+val: images/val
+test: images/test
+
+nc: 6
+names:
+  0: crazing
+  1: inclusion
+  2: patches
+  3: pitted_surface
+  4: rolled-in_scale
+  5: scratches

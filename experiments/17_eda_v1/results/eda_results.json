@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "dataset": "NEU-DET",
+    "analysis_date": "2026-07-02 14:28:18",
+    "total_images": 1800,
+    "total_annotations": 4189,
+    "classes": [
+      "crazing",
+      "inclusion",
+      "patches",
+      "pitted_surface",
+      "rolled-in_scale",
+      "scratches"
+    ],
+    "splits": {
+      "train": 1290,
+      "val": 344,
+      "test": 166
+    }
+  },
+  "class_distribution": {
+    "inclusion": 1011,
+    "patches": 881,
+    "crazing": 689,
+    "rolled-in_scale": 628,
+    "scratches": 548,
+    "pitted_surface": 432
+  },
+  "imbalance_ratio": 2.3402777777777777,
+  "gini_coefficient": 0.15735656879127868,
+  "bbox_statistics": {
+    "width_mean": 71.4015278109334,
+    "width_median": 55.00000000000001,
+    "height_mean": 95.00931009787539,
+    "height_median": 77.0,
+    "area_mean": 6980.188350441633,
+    "area_median": 4714.999999999999
+  },
+  "size_distribution": {
+    "small_pct": 10.670804487944617,
+    "medium_pct": 66.22105514442588,
+    "large_pct": 23.108140367629506
+  },
+  "quality_metrics": {
+    "mean_brightness": 128.2846897777778,
+    "mean_contrast": 26.79391655098499,
+    "mean_blur_score": 773.2589122516921,
+    "dark_images_pct": 0.0,
+    "blurry_images_pct": 5.0
+  },
+  "data_quality": {
+    "exact_duplicate_groups": 1,
+    "edge_touching_pct": 56.57674862735737,
+    "out_of_bounds_count": 0
+  },
+  "class_weights": {
+    "inverse_frequency": {
+      "crazing": 0.9356,
+      "inclusion": 0.6376,
+      "patches": 0.7317,
+      "pitted_surface": 1.4922,
+      "rolled-in_scale": 1.0265,
+      "scratches": 1.1763
+    },
+    "effective_number": {
+      "crazing": 0.9376,
+      "inclusion": 0.6492,
+      "patches": 0.7403,
+      "pitted_surface": 1.4765,
+      "rolled-in_scale": 1.0256,
+      "scratches": 1.1707
+    }
+  }
+}

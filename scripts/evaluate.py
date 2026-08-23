@@ -166,16 +166,15 @@ def compute_comprehensive_score(
     multi_dataset_consistency: float = None,
 ):
     """
-    Compute comprehensive evaluation score per spec Section 6.2.
+    Compute comprehensive evaluation score (unified formula).
 
-    Weights:
-    - Clean mAP@0.5: 20%
-    - Avg perturbed mAP@0.5: 25%
-    - Robustness stability: 15%
-    - Multi-dataset consistency: 15% (if available, else redistributed)
-    - Parameter efficiency: 10%
-    - Inference speed: 10%
-    - Code availability: 5%
+    Single-dataset weights (from rebuild spec Section 5):
+    - Clean mAP@0.5: 23.5%
+    - Avg perturbed mAP@0.5: 29.5%
+    - Robustness stability: 17.5%
+    - Parameter efficiency: 12.0%
+    - Inference speed: 12.0%
+    - Code availability: 5.5%
     """
     clean_map = clean_metrics["mAP50"]
 
@@ -190,23 +189,17 @@ def compute_comprehensive_score(
 
     # Normalize param efficiency (mAP/params_M, capped at ~50)
     param_eff = min(clean_map / max(params_m, 0.1), 50.0) / 50.0
-    # Normalize speed (FPS, capped at 200)
-    speed_norm = min(fps / 200.0, 1.0)
+    # Normalize speed (FPS, capped at 300)
+    speed_norm = min(fps / 300.0, 1.0)
 
     score = (
-        0.20 * clean_map
-        + 0.25 * avg_perturbed
-        + 0.15 * max(stability, 0.0)
-        + 0.10 * param_eff
-        + 0.10 * speed_norm
-        + 0.05 * 1.0  # code availability (always 1 for us)
+        0.235 * clean_map
+        + 0.295 * avg_perturbed
+        + 0.175 * max(stability, 0.0)
+        + 0.12 * param_eff
+        + 0.12 * speed_norm
+        + 0.055 * 1.0  # code availability (always 1 for us)
     )
-
-    if multi_dataset_consistency is not None:
-        score += 0.15 * multi_dataset_consistency
-    else:
-        # Redistribute multi-dataset weight to clean + robustness
-        score += 0.05 * clean_map + 0.10 * avg_perturbed
 
     return {
         "comprehensive_score": score,

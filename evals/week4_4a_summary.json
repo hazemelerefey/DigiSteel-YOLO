@@ -1,0 +1,19 @@
+{
+  "experiment": "fresh_baseline",
+  "baseline_map50": 0.758,
+  "current_map50": 0.79599127067369,
+  "delta_map50": 0.037991270673690014,
+  "map50_95": 0.4480757190298094,
+  "precision": 0.724458418419172,
+  "recall": 0.7543275614403827,
+  "per_class_ap50": {
+    "crazing": 0.3991391409037858,
+    "inclusion": 0.8936926920382279,
+    "patches": 0.8905921424954538,
+    "pitted_surface": 0.7915270513787891,
+    "rolled-in_scale": 0.8069056881349749,
+    "scratches": 0.994090909090909
+  },
+  "training_time_hours": 2.26,
+  "copy_paste_used": 0.1
+}

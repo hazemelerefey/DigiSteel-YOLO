@@ -29,12 +29,14 @@ def register_custom_modules():
     Register custom modules in the Ultralytics namespace.
 
     Must be called BEFORE loading any YAML config that references these modules.
-    This injects GhostConv, WFCA, and EMA into ultralytics.nn.tasks globals
+    This injects custom modules into ultralytics.nn.tasks globals
     so the YAML parser can find them by name.
     """
     import ultralytics.nn.tasks as tasks
-    from digisteel.modules import EMA, GhostConv, WFCA
+    from digisteel.modules import CoordAttention, DAFE, EMA, GhostConv, WFCA
 
+    tasks.CoordAttention = CoordAttention
+    tasks.DAFE = DAFE
     tasks.GhostConv = GhostConv
     tasks.WFCA = WFCA
     tasks.EMA = EMA
@@ -90,23 +92,22 @@ class DigiSteelTrainer(DetectionTrainer):
     2. _do_train() — second-chance patch before first training step
     """
 
-    _iou_patched = False
-
     def get_model(self, cfg=None, weights=None, verbose=True):
         """Build model and inject Inner-WIoU into BboxLoss."""
+        self._iou_patched = False
         model = super().get_model(cfg, weights, verbose)
         self._try_patch_loss(model, verbose)
         return model
 
-    def _do_train(self, world_size=1):
+    def _do_train(self):
         """Second-chance loss injection before training starts."""
-        if not self._iou_patched and hasattr(self, "model"):
+        if not getattr(self, "_iou_patched", False) and hasattr(self, "model"):
             self._try_patch_loss(self.model, verbose=True)
-        return super()._do_train(world_size)
+        return super()._do_train()
 
     def _try_patch_loss(self, model, verbose=False):
         """Attempt to inject InnerWIoUAdapter into bbox_loss.iou."""
-        if self._iou_patched:
+        if getattr(self, "_iou_patched", False):
             return
         if hasattr(model, "criterion") and hasattr(model.criterion, "bbox_loss"):
             model.criterion.bbox_loss.iou = InnerWIoUAdapter(lambda_weight=0.5)

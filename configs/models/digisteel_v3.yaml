@@ -1,0 +1,53 @@
+# DigiSteel-YOLO v3 Architecture
+# YOLOv11s backbone (standard Conv, no GhostConv) + Coordinate Attention at P3 only
+# Inner-WIoU loss injected via DigiSteelTrainer
+#
+# Design principles (from audit):
+#   1. Standard Conv — full 3×3 spatial filtering for texture-dependent steel defects
+#   2. Single CA at P3 — lightweight targeted attention, no attention stacking
+#   3. YOLOv11s scale — 2× backbone capacity for fine features at 200×200
+#   4. GhostConv removed — depthwise+pointwise insufficient for 200px texture defects
+#   5. WFCA/EMA removed — attention stacking delivered +0.1% combined
+#
+# IMPORTANT: Register CA module before loading:
+#   import ultralytics.nn.tasks as tasks
+#   from digisteel.modules import CoordAttention
+#   tasks.CoordAttention = CoordAttention
+
+nc: 6
+scales:
+  s: [0.50, 0.50, 1024]  # YOLO11s scale factors: 2× n's depth
+
+# Backbone: Standard Conv + CA at P3
+backbone:
+  - [-1, 1, Conv, [64, 3, 2]]          # 0-P1/2
+  - [-1, 1, Conv, [128, 3, 2]]         # 1-P2/4
+  - [-1, 1, C2f, [128, True]]          # 2
+  - [-1, 1, Conv, [256, 3, 2]]         # 3-P3/8
+  - [-1, 1, C2f, [256, True]]          # 4
+  - [-1, 1, CoordAttention, [256]]     # 5  CA at P3: lightweight spatial-channel attention
+  - [-1, 1, Conv, [512, 3, 2]]         # 6-P4/16
+  - [-1, 1, C2f, [512, True]]          # 7
+  - [-1, 1, Conv, [1024, 3, 2]]        # 8-P5/32
+  - [-1, 1, C2f, [1024, True]]         # 9
+  - [-1, 1, SPPF, [1024, 5]]           # 10
+
+# Neck: Standard PAN-FPN (no attention in neck)
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 11
+  - [[-1, 7], 1, Concat, [1]]                     # 12  cat P4
+  - [-1, 1, C2f, [512]]                           # 13
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 14
+  - [[-1, 5], 1, Concat, [1]]                     # 15  cat P3 (after CA)
+  - [-1, 1, C2f, [256]]                           # 16
+
+  - [-1, 1, Conv, [256, 3, 2]]                   # 17  downsample
+  - [[-1, 13], 1, Concat, [1]]                    # 18  cat P4-up
+  - [-1, 1, C2f, [512]]                           # 19
+
+  - [-1, 1, Conv, [512, 3, 2]]                   # 20  downsample
+  - [[-1, 10], 1, Concat, [1]]                    # 21  cat P5 (SPPF)
+  - [-1, 1, C2f, [1024]]                          # 22
+
+  - [[16, 19, 22], 1, Detect, [nc]]              # 23  Detect
