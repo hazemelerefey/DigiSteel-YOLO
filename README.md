@@ -1,7 +1,7 @@
 <div align="center">
 
-# DAFEGate-YOLO
-### Dual-Branch Defect-Aware Feature Enhancement for Real-Time Surface Defect Detection in Hot-Rolled Flat Steel Production
+# DAFEsteel
+### Real-Time Automated Steel-Surface Inspection and Defect Detection for Hot-Rolled Flat Steel
 
 <br>
 
@@ -14,7 +14,7 @@
 
 <br>
 
-**Product:** DigiSteel &nbsp;|&nbsp; **Team:** DigiSteel Team &nbsp;|&nbsp; **Model:** DAFEGate-YOLO
+**Product:** DAFEsteel &nbsp;|&nbsp; **Team:** DAFEsteel Team &nbsp;|&nbsp; **Model:** DAFEGate-YOLO
 
 </div>
 
@@ -22,7 +22,7 @@
 
 ## 🔬 Overview
 
-**DAFEGate-YOLO** is a novel real-time defect detection system purpose-built for **hot-rolled flat steel sheet production lines**. It introduces the **DAFEGate** (Defect-Aware Feature Enhancement Gate) module — a lightweight, plug-in backbone enhancement for YOLOv11n that explicitly addresses the core challenge of industrial steel inspection: the **morphological duality** between two fundamentally different defect categories.
+**DAFEsteel** is a novel real-time defect detection system purpose-built for **hot-rolled flat steel sheet production lines**. It introduces the **DAFEGate** (Defect-Aware Feature Enhancement Gate) module — a lightweight, plug-in backbone enhancement for YOLOv11n that explicitly addresses the core challenge of industrial steel inspection: the **morphological duality** between two fundamentally different defect categories.
 
 > Steel surface defects in hot-rolled flat production split into two visual families that require entirely different detection strategies:
 > - **Linear defects** (*Crazing, Scratches*): High spatial-frequency thin cracks detectable by **Sobel edge features**
